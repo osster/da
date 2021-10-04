@@ -1,0 +1,4 @@
+#!/bin/bash
+export CURRENT_UID=$(id -u):$(id -g)
+echo ${CURRENT_UID}
+whoami
