@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsUUID, IsDate, } from 'class-validator';
-import { Site } from "../models/site.entity";
+import { Site } from "./../../models/site.entity";
 
 export class SiteDTO implements Readonly<SiteDTO> {
 

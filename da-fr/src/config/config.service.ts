@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+const path = require('path');
 
 require('dotenv').config();
 
@@ -53,6 +54,18 @@ class ConfigService {
     };
   }
 
+  public getRedisConfig() {
+    return {
+      host: this.getValue('REDIS_HOST'),
+      port: parseInt(this.getValue('REDIS_PORT')),
+      password: this.getValue('REDIS_PASS'),
+    };
+  }
+
+  public getTmpDir() {
+    return path.resolve(__dirname , '..', '..', `${this.getValue('TMP_DIR')}`);
+  }
+
 }
 
 const configService = new ConfigService(process.env)
@@ -61,7 +74,11 @@ const configService = new ConfigService(process.env)
     'POSTGRES_PORT',
     'POSTGRES_USER',
     'POSTGRES_PASSWORD',
-    'POSTGRES_DATABASE'
+    'POSTGRES_DATABASE',
+    'REDIS_HOST',
+    'REDIS_PORT',
+    'REDIS_PASS',
+    'TMP_DIR',
   ]);
 
 export { configService };
