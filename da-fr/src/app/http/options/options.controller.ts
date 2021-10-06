@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Param } from '@nestjs/common';
 import { OptionDTO } from './options.dto';
 import { OptionsService } from './options.service';
 
@@ -6,8 +6,15 @@ import { OptionsService } from './options.service';
 export class OptionsController {
     constructor(private srv: OptionsService) {}
     
-    @Get()
-    public async index(): Promise<OptionDTO[]> {
-        return await this.srv.getAll('6482840c-19aa-40f1-8c5c-e91e0e2184d8');
+    @Get(':site_id')
+    public async index(@Param('site_id') siteId: string): Promise<OptionDTO[]> {
+        try {
+            return await this.srv.getAll(siteId);
+        } catch (e) {
+            throw new HttpException({
+                status: HttpStatus.NOT_FOUND,
+                error: 'Options not found',
+              }, HttpStatus.NOT_FOUND);
+        }
     }
 }

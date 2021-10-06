@@ -1,5 +1,6 @@
 import { Entity, Column, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Dictionary } from './dictionary.entity';
 import { Site } from './site.entity';
 
 export enum OptionType {
@@ -19,6 +20,9 @@ export class Option extends BaseEntity {
 
   @ManyToOne(() => Site, site => site.options)
   site: Site;
+
+  @OneToMany(() => Dictionary, dictionary => dictionary.options)
+  dictionaries: Dictionary[];
 
   @Column({ type: 'varchar', length: 300 })
   name: string;

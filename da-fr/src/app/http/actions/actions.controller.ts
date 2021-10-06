@@ -4,58 +4,86 @@ import { ScrapService } from '../../jobs/scrap/scrap.service';
 import { ParseService } from '../../jobs/parse/parse.service';
 import { Logger } from '@nestjs/common';
 import { OptionsService } from '../options/options.service';
-import { Option } from 'src/app/models/options.entity';
+import { Option } from '../../models/options.entity';
 import { OptionDTO } from '../options/options.dto';
+import { DictionaryDTO } from '../dictionaries/dictionaries.dto';
+import { DictionariesService } from '../dictionaries/dictionaries.service';
 
 @Controller('actions')
 export class ActionsController {
     constructor(
         private optionsSrv: OptionsService,
+        private dictionariesSrv: DictionariesService,
         private scrapSrv: ScrapService, 
         private parseSrv: ParseService, 
-    ) {}
-
-    @Post('/scan/:site_id') 
-    public async scan(
-        @Param('site_id') siteId: string
-    ): Promise<any> {
+    ) {
+        
         this.scrapSrv.on('completed', (job, result) => {
+            const siteId = job.data.siteId;
             if (result && result.filePath) {
                 const filePath = result.filePath;
-                this.parseSrv.on('completed', async (job, result) => {
-                    // Store
-                    const data =  (result && result.options && result.options.length)
-                        ? result.options.map((o) => OptionDTO.fill({
-                            ...o,
-                            site: siteId
-                        })) 
-                        : [];
-                    Logger.verbose(`File ${filePath} for ${siteId} parsed ${data.length} items.`, 'scan');
-                    // console.log({ data });
-                    const filled = await this.optionsSrv.fill(siteId, data);
-                    Logger.verbose(`Stored ${filled} items.`, 'store');
-                    console.log({ filled })
-                });
                 this.parseSrv.jobParseOnliner(siteId, filePath);
             } else {
                 Logger.error(`Something went wrong due scrapping ${siteId}. File path not found.`);
             }
         });
+        
+        this.parseSrv.on('completed', async (job, result) => {
+            const siteId = job.data.siteId;
+            const filePath = job.data.filePath;
+            // Store
+            const optionsData =  (result && result.options && result.options.length)
+            ? result.options.map((o) => OptionDTO.fill({
+                ...o,
+                site: siteId
+            })) 
+            : [];
+            Logger.verbose(`File ${filePath} for ${siteId} parsed ${optionsData.length} items.`, 'scan');
+            const filled = await this.optionsSrv.fill(siteId, optionsData);
+            Logger.verbose(`Stored ${filled} items.`, 'store');
+
+            const dictionariesData = [];
+            if (result && result.dictionaries && result.dictionaries.length) {
+                const options = await this.optionsSrv.getByParameterIdIn(siteId, result.dictionaries.map(d => d.key));
+                const dictionariesFiltered = result.dictionaries
+                    .map((d) => {
+                        const opt = options.find(o => o.parameter_id === d.key);
+                        d.site = siteId;
+                        d.option = opt ? opt.id : null;
+                        return d;
+                    })
+                    .filter(d => d.option !== null);
+
+                    dictionariesFiltered.forEach((d) => {
+                        if (d.values && d.values.length) { 
+                            d.values.forEach((dv) => {
+                                dictionariesData.push(
+                                    DictionaryDTO.fill({
+                                        key: dv.id,
+                                        name: dv.name,
+                                        site: d.site,
+                                        option: d.option, 
+                                    })
+                                );
+                            });
+                        } else {
+                            Logger.error(`dictionary values not found.`, 'scan');
+                        }
+                    })
+            }
+            Logger.verbose(`File ${filePath} for ${siteId} parsed ${dictionariesData.length} dictionaries.`, 'scan');
+            if (dictionariesData.length) {
+                const res = await this.dictionariesSrv.fill(siteId, dictionariesData);
+                Logger.verbose(`Stored ${res[0]} dictionaries, updated ${res[1]}.`, 'store');
+            }
+        });
+    }
+
+    @Post('/scan/:site_id') 
+    public async scan(
+        @Param('site_id') siteId: string
+    ): Promise<any> {
         this.scrapSrv.jobScrapOnliner(siteId);
-        // ScanOnlinerCatalogQueue.on('completed', (job, result) => {
-        //     console.log('Job `ScanOnlinerCatalogQueue` completed with output result!', result);
-        //     ParseOnlinerCatalogQueue.add({ 
-        //         file: result.file,
-        //         srv: () => { console.log('someone') },
-        //     });
-        //     ParseOnlinerCatalogQueue.on('completed', (job, result) => {
-        //         console.log('Job `ParseOnlinerCatalogQueue` completed with output result!', result);
-        //     });
-        // });
-        // ScanOnlinerCatalogQueue.on('progress', function (job, progress) {
-        //     console.log({ progress });
-        // });
-        // ScanOnlinerCatalogQueue.add({ siteId });
         return { siteId }
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Option } from './../../models/options.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { OptionDTO } from './options.dto';
 
 @Injectable()
@@ -9,8 +9,20 @@ export class OptionsService {
     constructor(@InjectRepository(Option) private readonly repo: Repository<Option>) {}
     
     public async getAll(siteId: string): Promise<OptionDTO[]> {
-        return await (await this.repo.find({where: { site: siteId }}))
+        return (await this.repo.find({where: { site: siteId }, relations: ['site']}))
             .map(e => OptionDTO.fill(e));
+    }
+    
+    public async getByParameterId(siteId: string, parameterId: string): Promise<OptionDTO[]> {
+        const options = (await this.repo.find({where: { site: siteId, parameter_id: parameterId }, relations: ['site']}))
+            .map(e => OptionDTO.fill(e));
+        return options;
+    }
+    
+    public async getByParameterIdIn(siteId: string, parameterIds: string[]): Promise<OptionDTO[]> {
+        const options = (await this.repo.find({where: { site: siteId, parameter_id: In(parameterIds) }, relations: ['site']}))
+            .map(e => OptionDTO.fill(e));
+        return options;
     }
 
     public async create(dto: OptionDTO): Promise<OptionDTO> {
@@ -38,8 +50,8 @@ export class OptionsService {
                 .map(i => i.name);
             await rows.forEach(async (i) => {
                 if (!existing.includes(i.name)) {
-                    await this.create(i);
                     filled++;
+                    await this.create(i);
                 }
             });
         }

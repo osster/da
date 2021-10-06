@@ -14,6 +14,7 @@ const ParseOnlinerCatalogQueue = async function (args) {
     const names = [];
     const types = [];
     const options = [];
+    const dictionaries = [];
     const optionColumns = [];
     const SkipColumns = [
         'max_count',
@@ -64,15 +65,26 @@ const ParseOnlinerCatalogQueue = async function (args) {
                 });
             options.push(json.facets.additional.items[k]);
         });
-    // console.log({ types: JSON.stringify(names, null, 2) });
+
+    Object.keys(json.dictionaries)
+        .forEach((k) => {
+            dictionaries.push({
+                key: k,
+                values: json.dictionaries[k],
+            });
+        });
+    
+        // console.log({ types: JSON.stringify(names, null, 2) });
     // console.log({ types: JSON.stringify(types, null, 2) });
     // console.log({ optionColumns: JSON.stringify(optionColumns, null, 2) });
-    console.log({ file: args.file, optionsCount: options.length });
-    // console.log({ optionsExist: optionsService });
+    
+    fs.unlinkSync(baseDir);
+
     return {
          t: new Date(),
         file: args.file,
         options,
+        dictionaries,
     };
 };
 

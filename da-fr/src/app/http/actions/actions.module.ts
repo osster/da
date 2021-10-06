@@ -5,13 +5,14 @@ import { ScrapProcess } from '../../jobs/scrap/scrap.process';
 import { ScrapService } from '../../jobs/scrap/scrap.service';
 import { ParseProcess } from '../../jobs/parse/parse.process';
 import { ParseService } from '../../jobs/parse/parse.service';
-import { OptionsModule } from '../options/options.module';
 import { SitesModule } from '../sites/sites.module';
 import { ActionsController } from './actions.controller';
 import { ActionsService } from './actions.service';
 import { OptionsService } from '../options/options.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Option } from '../../models/options.entity';
+import { DictionariesService } from '../dictionaries/dictionaries.service';
+import { Dictionary } from '../../models/dictionary.entity';
 
 @Module({
     imports: [
@@ -47,7 +48,7 @@ import { Option } from '../../models/options.entity';
                 },
             })
         }),
-        TypeOrmModule.forFeature([Option]),
+        TypeOrmModule.forFeature([Option, Dictionary]),
     ],
     providers: [
         ActionsService,
@@ -56,6 +57,7 @@ import { Option } from '../../models/options.entity';
         ParseService,
         ParseProcess,
         OptionsService,
+        DictionariesService,
     ],
     controllers: [ActionsController],
     exports: [
@@ -65,6 +67,7 @@ import { Option } from '../../models/options.entity';
         ParseService,
         ParseProcess,
         OptionsService,
+        DictionariesService,
     ],
 })
 export class ActionsModule {}

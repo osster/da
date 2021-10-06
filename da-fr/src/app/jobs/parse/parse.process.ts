@@ -9,7 +9,7 @@ export class ParseProcess {
   async jobParseOnliner(job: Job<{ siteId: string, filePath: string }>) {
     const data = await ParseOnlinerCatalogQueue({ file: job.data.filePath })
     Logger.verbose(`${job.data.siteId} ${job.data.filePath} (pid ${process.pid})`, `queueParse`);
-    return  { filePath: data.file, options: data.options };
+    return  { filePath: data.file, options: data.options, dictionaries: data.dictionaries };
   }
 
   @OnQueueProgress()
