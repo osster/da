@@ -8,6 +8,7 @@ import { ActionsModule } from './app/http/actions/actions.module';
 import { SitesModule } from './app/http/sites/sites.module';
 import { OptionsModule } from './app/http/options/options.module';
 import { DictionariesModule } from './app/http/dictionaries/dictionaries.module';
+import { SectionsModule } from './app/http/sections/sections.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DictionariesModule } from './app/http/dictionaries/dictionaries.module'
     BullModule.forRoot({
       redis: configService.getRedisConfig(),
     }),
+    SectionsModule,
   ],
   controllers: [
     AppController,

@@ -1,6 +1,7 @@
-import { Entity, Column, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, OneToMany, OneToOne, JoinColumn, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Dictionary } from './dictionary.entity';
+import { Section } from './sections.entity';
 import { Site } from './site.entity';
 
 export enum OptionType {
@@ -17,12 +18,6 @@ export enum OptionSegments {
 
 @Entity({ name: 'option' })
 export class Option extends BaseEntity {
-
-  @ManyToOne(() => Site, site => site.options)
-  site: Site;
-
-  @OneToMany(() => Dictionary, dictionary => dictionary.options)
-  dictionaries: Dictionary[];
 
   @Column({ type: 'varchar', length: 300 })
   name: string;
@@ -71,4 +66,17 @@ export class Option extends BaseEntity {
      default: null
     })
     visible_in_segments: OptionSegments;
+
+    
+  @ManyToOne(() => Site, site => site.options)
+  site: Site;
+
+  @OneToMany(() => Dictionary, dictionary => dictionary.options)
+  dictionaries: Dictionary[];
+  
+  @ManyToMany(type => Section, section => section.options, {
+      cascade: true
+  })
+  @JoinTable()
+  sections: Section[];
 }

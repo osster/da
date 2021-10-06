@@ -6,13 +6,17 @@ import ScrapOnlinerCatalogQueue from './libs/scrap.onliner';
 
 @Processor('queueScrap')
 export class ScrapProcess {
-  private filePath: string = '';
-
   @Process('jobScrapOnliner')
-  async jobScrapOnliner(job: Job<{ siteId: string }>) {
-    const data = await ScrapOnlinerCatalogQueue();
+  async jobScrapOnliner(job: Job<{ siteId: string, sectionId: string, url: string }>) {
+    const data = await ScrapOnlinerCatalogQueue(job.data.siteId, job.data.sectionId, job.data.url);
     Logger.verbose(`${job.data.siteId} (pid ${process.pid})`, `queueScrap`);
-    return { filePath: data.file };
+    return {
+      siteId: data.siteId,
+      sectionId: data.sectionId,
+      url: data.url,
+      filePath: data.file,
+      t: data.t
+    };
   }
 
   @OnQueueProgress()

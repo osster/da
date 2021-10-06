@@ -13,7 +13,11 @@ export class ParseService {
             .on(event, (job: any, result: any) => callback(job, result));
     }
 
-    async jobParseOnliner(site_id, file_path) {
-        return await this.queueParse.add('jobParseOnliner', { siteId: site_id, filePath: file_path });
+    async jobParseOnliner(args) {
+        return await this.queueParse.add('jobParseOnliner', {
+            siteId: args.siteId,
+            sectionId: args.sectionId,
+            filePath: args.filePath
+        });
     }
 }

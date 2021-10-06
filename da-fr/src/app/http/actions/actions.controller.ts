@@ -8,10 +8,12 @@ import { Option } from '../../models/options.entity';
 import { OptionDTO } from '../options/options.dto';
 import { DictionaryDTO } from '../dictionaries/dictionaries.dto';
 import { DictionariesService } from '../dictionaries/dictionaries.service';
+import { SiteDTO } from '../sites/sites.dto';
 
 @Controller('actions')
 export class ActionsController {
     constructor(
+        private actionsSrv: ActionsService,
         private optionsSrv: OptionsService,
         private dictionariesSrv: DictionariesService,
         private scrapSrv: ScrapService, 
@@ -20,9 +22,20 @@ export class ActionsController {
         
         this.scrapSrv.on('completed', (job, result) => {
             const siteId = job.data.siteId;
+            const sectionId = result.sectionId;
             if (result && result.filePath) {
                 const filePath = result.filePath;
-                this.parseSrv.jobParseOnliner(siteId, filePath);
+                // console.log('parse options', {
+                //     jobData: job.data,
+                //     siteId,
+                //     sectionId,
+                //     filePath
+                // });
+                this.parseSrv.jobParseOnliner({
+                    siteId,
+                    sectionId,
+                    filePath
+                });
             } else {
                 Logger.error(`Something went wrong due scrapping ${siteId}. File path not found.`);
             }
@@ -30,13 +43,17 @@ export class ActionsController {
         
         this.parseSrv.on('completed', async (job, result) => {
             const siteId = job.data.siteId;
+            const sectionId = job.data.sectionId;
             const filePath = job.data.filePath;
             // Store
             const optionsData =  (result && result.options && result.options.length)
-            ? result.options.map((o) => OptionDTO.fill({
-                ...o,
-                site: siteId
-            })) 
+            ? result.options.map((o) => {
+                return OptionDTO.fill({
+                    ...o,
+                    site: siteId,
+                    sections: [sectionId],
+                });
+            }) 
             : [];
             Logger.verbose(`File ${filePath} for ${siteId} parsed ${optionsData.length} items.`, 'scan');
             const filled = await this.optionsSrv.fill(siteId, optionsData);
@@ -83,7 +100,13 @@ export class ActionsController {
     public async scan(
         @Param('site_id') siteId: string
     ): Promise<any> {
-        this.scrapSrv.jobScrapOnliner(siteId);
+        const site: SiteDTO = await this.actionsSrv.getSite(siteId);
+        const sections = await this.actionsSrv.getSections(siteId);
+        // const options = await this.actionsSrv.getOptions(siteId, sections.map(s => s.id));
+        this.scrapSrv.jobScrapOnliner({
+            site,
+            sections,
+        });
         return { siteId }
     }
 }

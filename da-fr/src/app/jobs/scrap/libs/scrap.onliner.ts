@@ -1,13 +1,14 @@
+import { Logger } from '@nestjs/common';
 import axios from 'axios';
 import { configService } from '../../../../config/config.service';
 const Queue = require('bull');
 const fs = require('fs');
 const path = require('path');
 
-async function getJson () {
+async function getJson (url: string) {
     // https://catalog.onliner.by/sdapi/catalog.api/facets/mobile
     const data = await axios
-    .get('https://catalog.onliner.by/sdapi/catalog.api/facets/mobile')
+    .get(url)
     .then(res => {
         console.log(`statusCode: ${res.status}`);
         return res.data;
@@ -20,13 +21,14 @@ async function getJson () {
 
 async function storeJson(json: string) {
     const tmpDir = configService.getTmpDir();
-    let baseDir = path.join(tmpDir, `${(new Date()).getTime()}_onliner.json`);
+    const sfx = Math.round(Math.random() * 100000);
+    let baseDir = path.join(tmpDir, `${sfx}_onliner.json`);
     fs.open(`${baseDir}`, 'wx', (err, desc) => {
     if(!err && desc) {
         fs.writeFile(desc, json, (err) => {
             // Rest of your code
-            if (err) throw err;               
-            console.log('Results Received');
+            if (err) throw err;             
+            Logger.verbose(`Results Received at ${baseDir}`, 'storeJson');
         })
     }
     })
@@ -34,10 +36,13 @@ async function storeJson(json: string) {
 }
 
 
-const ScrapOnlinerCatalogQueue = async function () {
-    const json = await getJson();
+const ScrapOnlinerCatalogQueue = async function (siteId: string, sectionId: string, url: string) {
+    const json = await getJson(url);
     const filePath = await storeJson(JSON.stringify(json));
     return { 
+        siteId,
+        sectionId,
+        url,
         file: filePath,
         t: new Date() 
     };

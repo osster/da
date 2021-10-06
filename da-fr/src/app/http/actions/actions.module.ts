@@ -13,6 +13,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Option } from '../../models/options.entity';
 import { DictionariesService } from '../dictionaries/dictionaries.service';
 import { Dictionary } from '../../models/dictionary.entity';
+import { Site } from '../../models/site.entity';
+import { Section } from '../../models/sections.entity';
 
 @Module({
     imports: [
@@ -48,7 +50,12 @@ import { Dictionary } from '../../models/dictionary.entity';
                 },
             })
         }),
-        TypeOrmModule.forFeature([Option, Dictionary]),
+        TypeOrmModule.forFeature([
+            Site,
+            Section,
+            Option,
+            Dictionary,
+        ]),
     ],
     providers: [
         ActionsService,

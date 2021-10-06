@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsEnum, IsInstance, IsNumber, IsString, IsUUID } from "class-validator";
+import { IsArray, IsDate, IsEnum, IsInstance, IsNumber, IsString, IsUUID } from "class-validator";
 import { Site } from "./../../models/site.entity";
 import { Option, OptionType, OptionSegments } from "./../../models/options.entity";
+import { Section } from "../../models/sections.entity";
 
 export class OptionDTO implements Readonly<OptionDTO> {
 
@@ -57,6 +58,10 @@ export class OptionDTO implements Readonly<OptionDTO> {
     @ApiProperty({ required: true })
     @IsInstance(Site)
     site: Site;
+    
+    @ApiProperty({ required: false })
+    @IsArray()
+    sections: Section[];
 
     @ApiProperty({ required: true })
     @IsDate()
@@ -85,6 +90,7 @@ export class OptionDTO implements Readonly<OptionDTO> {
         obj.enabled_in_segments = dto.enabled_in_segments;
         obj.visible_in_segments = dto.visible_in_segments;
         obj.site = dto.site;
+        obj.sections = dto.sections;
         obj.createdAt = dto.createdAt;
         obj.updatedAt = dto.updatedAt;
         obj.deletedAt = dto.deletedAt;
@@ -106,6 +112,7 @@ export class OptionDTO implements Readonly<OptionDTO> {
         obj.enabled_in_segments = this.enabled_in_segments;
         obj.visible_in_segments = this.visible_in_segments;
         obj.site = this.site;
+        obj.sections = this.sections;
         obj.createdAt = this.createdAt || new Date();
         obj.updatedAt = this.updatedAt || new Date();
         obj.deletedAt = this.deletedAt || null;

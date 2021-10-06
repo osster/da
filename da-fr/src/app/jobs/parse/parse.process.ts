@@ -6,10 +6,16 @@ import ParseOnlinerCatalogQueue from './libs/parse.onliner';
 @Processor('queueParse')
 export class ParseProcess {
   @Process('jobParseOnliner')
-  async jobParseOnliner(job: Job<{ siteId: string, filePath: string }>) {
+  async jobParseOnliner(job: Job<{ siteId: string, sectionId: string, filePath: string }>) {
     const data = await ParseOnlinerCatalogQueue({ file: job.data.filePath })
-    Logger.verbose(`${job.data.siteId} ${job.data.filePath} (pid ${process.pid})`, `queueParse`);
-    return  { filePath: data.file, options: data.options, dictionaries: data.dictionaries };
+    Logger.verbose(`${job.data.siteId} ${job.data.filePath} ${job.data.sectionId} (pid ${process.pid})`, `queueParse`);
+    return  {
+      siteId: job.data.siteId,
+      sectionId: job.data.sectionId,
+      filePath: data.file,
+      options: data.options,
+      dictionaries: data.dictionaries
+    };
   }
 
   @OnQueueProgress()
