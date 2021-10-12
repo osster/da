@@ -16,18 +16,13 @@ export class ScrapService {
     }
 
     async jobScrapOnliner(args: {site: SiteDTO, sections: SectionDTO[]}) {
-        args.sections.forEach((s) => {            
-            const url = `https://${args.site.host}${s.uri}`;
-            const sectionIds = args.sections.map(i => i.id);
-            // console.log('jobScrapOnliner options', {
-            //     siteId: args.site.id,
-            //     sectionId: s.id,
-            //     url,
-            // });
+        args.sections.forEach((s) => {
+            // Scrap options
+            const optionsUrl = `https://${args.site.host}/sdapi/catalog.api/facets${s.uri}`;
             this.queueScrap.add('jobScrapOnliner', { 
                 siteId: args.site.id,
                 sectionId: s.id,
-                url,
+                url: optionsUrl,
              });
         });
     }

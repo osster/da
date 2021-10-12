@@ -1,5 +1,4 @@
 #!/bin/bash
 export CURRENT_UID=$(id -u):$(id -g)
-# docker exec -it da_node "yarn nest -- generate $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}"
-cd ../da-fr
+cd ../backend
 yarn nest -- generate $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}

@@ -50,7 +50,7 @@ services:
     ports:
       - 30001:3000
     volumes:
-      - /d/dev/projects/da/da-fr:/var/www
+      - /d/dev/projects/da/backend:/var/www
     depends_on:
       - da_db
       - da_redis

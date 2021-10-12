@@ -1,7 +1,7 @@
 #!/bin/bash
 export CURRENT_UID=$(id -u):$(id -g)
 
-cd ./../da-fr/
+cd ./backend/
 
 curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 

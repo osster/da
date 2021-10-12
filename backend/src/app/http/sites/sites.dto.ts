@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsUUID, IsDate, } from 'class-validator';
-import { Site } from "./../../models/site.entity";
+import { IsString, IsUUID, IsDate, IsEnum, } from 'class-validator';
+import { Site, SiteType } from "./../../models/site.entity";
 
 export class SiteDTO implements Readonly<SiteDTO> {
 
@@ -20,6 +20,10 @@ export class SiteDTO implements Readonly<SiteDTO> {
     @IsString()
     description: string;
 
+    @ApiProperty({ required: false })
+    @IsEnum(SiteType)
+    type: SiteType;
+
     @ApiProperty({ required: true })
     @IsDate()
     createdAt: Date;
@@ -38,6 +42,7 @@ export class SiteDTO implements Readonly<SiteDTO> {
         obj.name = dto.name;
         obj.host = dto.host;
         obj.description = dto.description;
+        obj.type = dto.type;
         obj.createdAt = dto.createdAt;
         obj.updatedAt = dto.updatedAt;
         obj.deletedAt = dto.deletedAt;
@@ -50,6 +55,7 @@ export class SiteDTO implements Readonly<SiteDTO> {
         obj.name = this.name;
         obj.host = this.host;
         obj.description = this.description;
+        obj.type = this.type;
         obj.createdAt = this.createdAt || new Date();
         obj.updatedAt = this.updatedAt || new Date();
         obj.deletedAt = this.deletedAt || null;
