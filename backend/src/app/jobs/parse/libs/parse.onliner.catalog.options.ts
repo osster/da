@@ -1,14 +1,8 @@
-import { NestFactory } from "@nestjs/core";
-import { OptionsService } from "../../../http/options/options.service";
-import { AppModule } from "../../../../app.module";
-import { Job } from "bull";
-
-const Queue = require('bull');
 const fs = require('fs');
 const path = require('path');
 
-const ParseOnlinerCatalogQueue = async function (args) {
-    let baseDir = path.join(args.file);
+const ParseOnlinerCatalogOptions = async function (args: { siteId: string, sectionId: string, filePath: string }) {
+    let baseDir = path.join(args.filePath);
     let data = fs.readFileSync(baseDir);
     const json = JSON.parse(data);
     const names = [];
@@ -16,18 +10,6 @@ const ParseOnlinerCatalogQueue = async function (args) {
     const options = [];
     const dictionaries = [];
     const optionColumns = [];
-    const SkipColumns = [
-        'max_count',
-        'predefined_ranges',
-        'disabled_description',
-        'popular_dictionary_values',
-        'segment_related_name',
-    ];
-
-
-    // const context = await NestFactory.createApplicationContext(AppModule);
-    // const optionsService = context.get(OptionsService);
-    // const optionsExist = await optionsService.getAll('6482840c-19aa-40f1-8c5c-e91e0e2184d8');
 
     Object.keys(json.facets.additional.items)
         .forEach((k) => {
@@ -74,18 +56,15 @@ const ParseOnlinerCatalogQueue = async function (args) {
             });
         });
     
-        // console.log({ types: JSON.stringify(names, null, 2) });
-    // console.log({ types: JSON.stringify(types, null, 2) });
-    // console.log({ optionColumns: JSON.stringify(optionColumns, null, 2) });
-    
     fs.unlinkSync(baseDir);
 
     return {
-         t: new Date(),
-        file: args.file,
+        siteId: args.siteId,
+        sectionId: args.sectionId,
+        filePath: args.filePath,
         options,
         dictionaries,
     };
 };
 
-export default ParseOnlinerCatalogQueue;
+export default ParseOnlinerCatalogOptions;

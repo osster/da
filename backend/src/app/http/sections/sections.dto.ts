@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsInstance, IsString, IsUUID } from "class-validator";
+import { IsDate, IsInstance, IsNumber, IsString, IsUUID } from "class-validator";
 import { Site } from "./../../models/site.entity";
 import { Section } from "../../models/sections.entity";
 
@@ -20,6 +20,10 @@ export class SectionDTO implements Readonly<SectionDTO> {
     @ApiProperty({ required: false })
     @IsString()
     description: string | null;
+  
+    @ApiProperty({ required: false })
+    @IsNumber()
+    pages: number;
 
 
     @ApiProperty({ required: true })
@@ -44,6 +48,7 @@ export class SectionDTO implements Readonly<SectionDTO> {
         obj.name = dto.name;
         obj.uri = dto.uri;
         obj.description = dto.description;
+        obj.pages = dto.pages;
         obj.site = dto.site;
         obj.createdAt = dto.createdAt;
         obj.updatedAt = dto.updatedAt;
@@ -57,6 +62,7 @@ export class SectionDTO implements Readonly<SectionDTO> {
         obj.name = this.name;
         obj.uri = this.uri;
         obj.description = this.description;
+        obj.pages = this.pages;
         obj.site = this.site;
         obj.createdAt = this.createdAt || new Date();
         obj.updatedAt = this.updatedAt || new Date();

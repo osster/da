@@ -15,6 +15,9 @@ export class Section extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  @Column({ type: 'integer', unsigned: true, default: 1 })
+  pages: number;
+
 
   @ManyToOne(() => Site, site => site.sections)
   site: Site;

@@ -5,6 +5,8 @@ import { ScrapProcess } from '../../jobs/scrap/scrap.process';
 import { ScrapService } from '../../jobs/scrap/scrap.service';
 import { ParseProcess } from '../../jobs/parse/parse.process';
 import { ParseService } from '../../jobs/parse/parse.service';
+import { DbManageProcess } from '../../jobs/db_manage/db_manage.process';
+import { DbManageService } from '../../jobs/db_manage/db_manage.service';
 import { SitesModule } from '../sites/sites.module';
 import { ActionsController } from './actions.controller';
 import { ActionsService } from './actions.service';
@@ -15,11 +17,14 @@ import { DictionariesService } from '../dictionaries/dictionaries.service';
 import { Dictionary } from '../../models/dictionary.entity';
 import { Site } from '../../models/site.entity';
 import { Section } from '../../models/sections.entity';
+import { SectionsModule } from '../sections/sections.module';
+import { OptionsModule } from '../options/options.module';
 
 @Module({
     imports: [
         SitesModule,
-        // OptionsModule,
+        SectionsModule,
+        OptionsModule,
         BullModule.registerQueueAsync({
             name: 'queueScrap',
             useFactory: async () => ({
@@ -50,6 +55,21 @@ import { Section } from '../../models/sections.entity';
                 },
             })
         }),
+        BullModule.registerQueueAsync({
+            name: 'queueDbManage',
+            useFactory: async () => ({
+                name: 'queueDbManage',
+                redis: configService.getRedisConfig(),
+                prefix: 'da',
+                defaultJobOptions: {
+                    removeOnComplete: true,
+                    removeOnFail: true,
+                },
+                settings: {
+                    lockDuration: 300000,
+                },
+            })
+        }),
         TypeOrmModule.forFeature([
             Site,
             Section,
@@ -63,6 +83,8 @@ import { Section } from '../../models/sections.entity';
         ScrapProcess,
         ParseService,
         ParseProcess,
+        DbManageService,
+        DbManageProcess,
         OptionsService,
         DictionariesService,
     ],
@@ -73,6 +95,8 @@ import { Section } from '../../models/sections.entity';
         ScrapProcess,
         ParseService,
         ParseProcess,
+        DbManageService,
+        DbManageProcess,
         OptionsService,
         DictionariesService,
     ],
