@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { Injectable, Module } from "@nestjs/common";
+import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
 import { Connection, getConnection, QueryRunner, Repository } from "typeorm";
-import { Option } from "../../../../models/options.entity";
-import { Section } from "../../../../models/sections.entity";
+import { Option } from "../../../models/options.entity";
+import { Section } from "../../../models/sections.entity";
 
 const crypto = require('crypto');
 
 @Injectable()
-class DbManageOnlinerCatalogOptions {
+export class DbManageOnlinerCatalogOptions {
     private tableName: string;
     private columns: string[];
     private columnsQuery: {[key: string]: string};
@@ -15,7 +15,7 @@ class DbManageOnlinerCatalogOptions {
 
     constructor (
         @InjectRepository(Section)
-        private readonly sectionRepository: Repository<Section>,
+        private readonly sectionRepo: Repository<Section>,
     ) {
         const connection: Connection = getConnection();
         this.queryRunner = connection.createQueryRunner();
@@ -23,7 +23,7 @@ class DbManageOnlinerCatalogOptions {
     }
 
     public async run(sectionId: string) {
-        const section = await this.sectionRepository.findOne({
+        const section = await this.sectionRepo.findOne({
           where: { id: sectionId },
           relations: ['site','options'],
         });
@@ -117,4 +117,17 @@ class DbManageOnlinerCatalogOptions {
     }
 };
 
-export default DbManageOnlinerCatalogOptions;
+@Module({
+    imports: [
+        TypeOrmModule.forFeature([
+            Section,
+        ]),
+    ],
+    providers: [
+        DbManageOnlinerCatalogOptions,
+    ],
+    exports: [
+        DbManageOnlinerCatalogOptions,
+    ]
+})
+export class DbManageOnlinerCatalogOptionsModule {}

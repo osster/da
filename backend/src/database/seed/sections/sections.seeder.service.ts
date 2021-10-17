@@ -20,16 +20,16 @@ export class SectionSeederService {
     *
     * @constructs
     *
-    * @param {Repository<Site>} siteRepository
-    * @param {Repository<Section>} sectionRepository
+    * @param {Repository<Site>} siteRepo
+    * @param {Repository<Section>} sectionRepo
     */
     constructor(
         @InjectRepository(Site)
-        private readonly siteRepository: Repository<Site>,
+        private readonly siteRepo: Repository<Site>,
         @InjectRepository(Section)
-        private readonly sectionRepository: Repository<Section>,
+        private readonly sectionRepo: Repository<Section>,
     ) {
-        this.siteRepository.find().then(sites => this.sites = sites);
+        this.siteRepo.find().then(sites => this.sites = sites);
     }
 
     /**
@@ -40,7 +40,7 @@ export class SectionSeederService {
     create(): Array<Promise<Site>> {
         this.sections = sectionsData(this.sites);
         return this.sections.map(async (section: any) => {
-            return await this.sectionRepository
+            return await this.sectionRepo
                 .findOne({ name: section.name })
                 // .exec()
                 .then(async dbItem => {
@@ -50,7 +50,7 @@ export class SectionSeederService {
                         return Promise.resolve(null);
                     }
                     return Promise.resolve(
-                        await this.sectionRepository.save(section),
+                        await this.sectionRepo.save(section),
                     );
                 })
                 .catch(error => Promise.reject(error));

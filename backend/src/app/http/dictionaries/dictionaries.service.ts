@@ -43,7 +43,7 @@ export class DictionariesService {
         let filled = 0;
         let updated = 0;
         if (rows.length) {
-            rows.forEach(async (i: any) => {
+            for (const i of rows) {
                 const existing = (await this.repo.findOne({
                     where: { 
                         site: siteId,
@@ -63,7 +63,7 @@ export class DictionariesService {
                     }));
                     await this.update(item.id, item);
                 }
-            });
+            }
         }
         return [filled, updated];
     }

@@ -1,11 +1,8 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { configService } from '../../../config/config.service';
-import { ScrapProcess } from '../../jobs/scrap/scrap.process';
 import { ScrapService } from '../../jobs/scrap/scrap.service';
-import { ParseProcess } from '../../jobs/parse/parse.process';
 import { ParseService } from '../../jobs/parse/parse.service';
-import { DbManageProcess } from '../../jobs/db_manage/db_manage.process';
 import { DbManageService } from '../../jobs/db_manage/db_manage.service';
 import { SitesModule } from '../sites/sites.module';
 import { ActionsController } from './actions.controller';
@@ -19,12 +16,24 @@ import { Site } from '../../models/site.entity';
 import { Section } from '../../models/sections.entity';
 import { SectionsModule } from '../sections/sections.module';
 import { OptionsModule } from '../options/options.module';
+import { ScrapOnlinerCatalogOptionsModule } from '../../libs/sources/onliner_catalog/scrap.onliner.catalog.options';
+import { ScrapOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/scrap.onliner.catalog.items';
+import { ParseOnlinerCatalogOptionsModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.options';
+import { ParseOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.items';
+import { ParseOnlinerCatalogPagesModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.pages';
+import { DbManageOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/db_manage.onliner.catalog.items';
 
 @Module({
     imports: [
         SitesModule,
         SectionsModule,
         OptionsModule,
+        ScrapOnlinerCatalogOptionsModule,
+        ScrapOnlinerCatalogItemsModule,
+        ParseOnlinerCatalogOptionsModule,
+        ParseOnlinerCatalogItemsModule,
+        ParseOnlinerCatalogPagesModule,
+        DbManageOnlinerCatalogItemsModule,
         BullModule.registerQueueAsync({
             name: 'queueScrap',
             useFactory: async () => ({
@@ -80,11 +89,8 @@ import { OptionsModule } from '../options/options.module';
     providers: [
         ActionsService,
         ScrapService,
-        ScrapProcess,
         ParseService,
-        ParseProcess,
         DbManageService,
-        DbManageProcess,
         OptionsService,
         DictionariesService,
     ],
@@ -92,11 +98,8 @@ import { OptionsModule } from '../options/options.module';
     exports: [
         ActionsService,
         ScrapService,
-        ScrapProcess,
         ParseService,
-        ParseProcess,
         DbManageService,
-        DbManageProcess,
         OptionsService,
         DictionariesService,
     ],

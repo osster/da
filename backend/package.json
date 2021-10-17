@@ -38,13 +38,15 @@
     "class-validator": "^0.13.1",
     "dotenv": "^10.0.0",
     "global": "^4.4.0",
+    "moment": "^2.29.1",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "swagger-ui-express": "^4.1.6",
     "typeorm": "^0.2.37",
-    "typeorm-seeding": "^1.6.1"
+    "typeorm-seeding": "^1.6.1",
+    "worker-farm": "^1.7.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.1.2",

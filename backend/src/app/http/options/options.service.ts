@@ -54,7 +54,7 @@ export class OptionsService {
         let filled = 0;
         let updated = 0;
         if (rows.length) {
-            await rows.forEach(async (i) => {
+            for (const i of rows) {
                 if (
                     i.name &&
                     i.name !== null && 
@@ -100,7 +100,7 @@ export class OptionsService {
                 } else {
                     Logger.error(`Record is empty ${JSON.stringify(i)}`, 'fill_options');
                 }
-            });
+            }
         }
         return [filled, updated];
     }

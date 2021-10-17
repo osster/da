@@ -18,11 +18,11 @@ export class SiteSeederService {
     *
     * @constructs
     *
-    * @param {Repository<Site>} siteRepository
+    * @param {Repository<Site>} siteRepo
     */
     constructor(
         @InjectRepository(Site)
-        private readonly siteRepository: Repository<Site>,
+        private readonly siteRepo: Repository<Site>,
     ) {
         this.sites = sitesData;
     }
@@ -34,7 +34,7 @@ export class SiteSeederService {
     */
     create(): Array<Promise<Site>> {
         return this.sites.map(async (site: SiteDTO) => {
-            return await this.siteRepository
+            return await this.siteRepo
                 .findOne({ type: site.type })
                 // .exec()
                 .then(async dbItem => {
@@ -44,7 +44,7 @@ export class SiteSeederService {
                         return Promise.resolve(null);
                     }
                     return Promise.resolve(
-                        await this.siteRepository.save(site),
+                        await this.siteRepo.save(site),
                     );
                 })
                 .catch(error => Promise.reject(error));

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Option } from '../../models/options.entity';
 import { In, Repository } from 'typeorm';
@@ -7,7 +7,8 @@ import { Site } from '../../models/site.entity';
 import { Section } from '../../models/sections.entity';
 import { SiteDTO } from '../sites/sites.dto';
 import { SectionDTO } from '../sections/sections.dto';
-import { StringifyOptions } from 'querystring';
+import { Job, Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class ActionsService {
@@ -17,7 +18,7 @@ export class ActionsService {
         @InjectRepository(Site)
         private readonly siteRepo: Repository<Site>,
         @InjectRepository(Section)
-        private readonly sectionRepo: Repository<Section>
+        private readonly sectionRepo: Repository<Section>,
     ) {}
 
     public async getSite(siteId: string) {
@@ -39,8 +40,4 @@ export class ActionsService {
         }))
             .map(e => OptionDTO.fill(e));
     }
-
-    // public async parse(siteId: string, fileName: string) {
-    //     // return await this.parserQueue.add('parse-onliner', { siteId, fileName });
-    // }
 }

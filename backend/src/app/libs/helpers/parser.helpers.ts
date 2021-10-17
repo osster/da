@@ -1,6 +1,6 @@
 import { Logger } from "@nestjs/common";
 import axios from "axios";
-import { configService } from "../../config/config.service";
+import { configService } from "../../../config/config.service";
 
 const fs = require("fs");
 const path = require("path");
