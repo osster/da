@@ -6,6 +6,7 @@ import { Section } from "../../models/sections.entity";
 import { Repository } from "typeorm";
 import { ScrapOnlinerCatalogOptions } from "../../libs/sources/onliner_catalog/scrap.onliner.catalog.options";
 import { ScrapOnlinerCatalogItems } from "../../libs/sources/onliner_catalog/scrap.onliner.catalog.items";
+import { ScrapOnlinerCatalogDetail } from "../../libs/sources/onliner_catalog/scrap.onliner.catalog.detail";
 
 @Injectable()
 @Processor('queueScrap')
@@ -21,6 +22,8 @@ export class ScrapService {
         private readonly scrapOnlinerCatalogOptions: ScrapOnlinerCatalogOptions,
         @Inject(ScrapOnlinerCatalogItems)
         private readonly scrapOnlinerCatalogItems: ScrapOnlinerCatalogItems,
+        @Inject(ScrapOnlinerCatalogDetail)
+        private readonly scrapOnlinerCatalogDetail: ScrapOnlinerCatalogDetail,
     ) {}
 
     on(event: string, callback: (job: any, result: any) => void) {
@@ -38,6 +41,12 @@ export class ScrapService {
     async jobScrapOnlinerCatalogItems(job: Job<{ siteId: string, sectionId: string, page: number }>) {
       const data = await this.scrapOnlinerCatalogItems.run(job.data.siteId, job.data.sectionId, job.data.page);
       Logger.verbose(`${job.data.siteId} page ${data.page} (pid ${process.pid})`, `queue_scrap_items`);
+      return data;
+    }
+    @Process('jobScrapOnlinerCatalogDetail')
+    async jobScrapOnlinerCatalogDetail(job: Job<{ siteId: string, sectionId: string, itemId: string }>) {
+      const data = await this.scrapOnlinerCatalogDetail.run(job.data.siteId, job.data.sectionId, job.data.itemId);
+      Logger.verbose(`${job.data.siteId} item ${data.itemId} (pid ${process.pid})`, `queue_scrap_detail`);
       return data;
     }
     

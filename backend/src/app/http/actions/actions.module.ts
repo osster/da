@@ -22,6 +22,7 @@ import { ParseOnlinerCatalogOptionsModule } from '../../libs/sources/onliner_cat
 import { ParseOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.items';
 import { ParseOnlinerCatalogPagesModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.pages';
 import { DbManageOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/db_manage.onliner.catalog.items';
+import { ScrapOnlinerCatalogDetailModule } from '../../libs/sources/onliner_catalog/scrap.onliner.catalog.detail';
 
 @Module({
     imports: [
@@ -30,6 +31,7 @@ import { DbManageOnlinerCatalogItemsModule } from '../../libs/sources/onliner_ca
         OptionsModule,
         ScrapOnlinerCatalogOptionsModule,
         ScrapOnlinerCatalogItemsModule,
+        ScrapOnlinerCatalogDetailModule,
         ParseOnlinerCatalogOptionsModule,
         ParseOnlinerCatalogItemsModule,
         ParseOnlinerCatalogPagesModule,
