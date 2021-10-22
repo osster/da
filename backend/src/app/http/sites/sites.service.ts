@@ -19,14 +19,14 @@ export class SitesService {
 
     public async update(id: string, dto: SiteDTO): Promise<SiteDTO> {
         const data = { ...dto };
-        data.updatedAt = new Date();
+        data.updated_at = new Date();
         const isUpdated = await this.repo.update(id, data);
         return SiteDTO.fill(await this.repo.findOne(id));
     }
 
     public async delete(id: string): Promise<boolean> {
         const obj = await this.repo.findOne(id);
-        obj.deletedAt = new Date();
+        obj.deleted_at = new Date();
         const res = await this.repo.save(obj);
         return true;
     }

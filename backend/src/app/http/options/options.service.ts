@@ -38,14 +38,14 @@ export class OptionsService {
 
     public async update(id: string, dto: OptionDTO): Promise<OptionDTO> {
         const data = { ...dto };
-        data.updatedAt = new Date();
+        data.updated_at = new Date();
         const isUpdated = await this.repo.update(id, data);
         return OptionDTO.fill(await this.repo.findOne(id));
     }
 
     public async delete(id: string): Promise<boolean> {
         const obj = await this.repo.findOne(id);
-        obj.deletedAt = new Date();
+        obj.deleted_at = new Date();
         const res = await this.repo.save(obj);
         return true;
     }
@@ -53,55 +53,55 @@ export class OptionsService {
     public async fill(siteId: string, rows: OptionDTO[]): Promise<Number[]> {
         let filled = 0;
         let updated = 0;
-        if (rows.length) {
-            for (const i of rows) {
-                if (
-                    i.name &&
-                    i.name !== null && 
-                    i.type && 
-                    i.parameter_id
-                ) {
-                    const existing = (await this.repo.findOne({
-                        where: { 
-                            site: siteId,
-                            name: i.name,
-                        },
-                        relations: ['sections']
-                    })); 
-                    if (
-                        !existing
-                    ) {
-                        filled++;
-                        await this.create(i);
-                    } else {
-                        const sections = await this.sectionRepo.find({
-                            where: { id: In(i.sections) }
-                        });
-                        existing.sections.forEach((s) => {
-                            if (sections.filter(_s => _s.id === s.id).length === 0) {
-                                sections.push(s);
-                            }
-                        });
-                        existing.name = i.name;
-                        existing.description = i.description;
-                        existing.type = i.type;  
-                        existing.parameter_id = i.parameter_id;
-                        existing.dictionary_id = i.dictionary_id;
-                        existing.bool_type = i.bool_type;
-                        existing.unit = i.unit;
-                        existing.ratio = i.ratio;
-                        existing.operation = i.operation;
-                        existing.enabled_in_segments = i.enabled_in_segments;
-                        existing.visible_in_segments = i.visible_in_segments;
-                        existing.sections = sections;
-                        const connection = getConnection();
-                        connection.manager.save(existing);
-                    }
-                } else {
-                    Logger.error(`Record is empty ${JSON.stringify(i)}`, 'fill_options');
-                }
-            }
-        }
+        // if (rows.length) {
+        //     for (const i of rows) {
+        //         if (
+        //             i.name &&
+        //             i.name !== null && 
+        //             i.type && 
+        //             i.parameter_id
+        //         ) {
+        //             const existing = (await this.repo.findOne({
+        //                 where: { 
+        //                     site: siteId,
+        //                     name: i.name,
+        //                 },
+        //                 relations: ['sections']
+        //             })); 
+        //             if (
+        //                 !existing
+        //             ) {
+        //                 filled++;
+        //                 await this.create(i);
+        //             } else {
+        //                 const sections = await this.sectionRepo.find({
+        //                     where: { id: In(i.sections) }
+        //                 });
+        //                 existing.sections.forEach((s) => {
+        //                     if (sections.filter(_s => _s.id === s.id).length === 0) {
+        //                         sections.push(s);
+        //                     }
+        //                 });
+        //                 existing.name = i.name;
+        //                 existing.description = i.description;
+        //                 existing.type = i.type;  
+        //                 existing.parameter_id = i.parameter_id;
+        //                 existing.dictionary_id = i.dictionary_id;
+        //                 existing.bool_type = i.bool_type;
+        //                 existing.unit = i.unit;
+        //                 existing.ratio = i.ratio;
+        //                 existing.operation = i.operation;
+        //                 existing.enabled_in_segments = i.enabled_in_segments;
+        //                 existing.visible_in_segments = i.visible_in_segments;
+        //                 existing.sections = sections;
+        //                 const connection = getConnection();
+        //                 connection.manager.save(existing);
+        //             }
+        //         } else {
+        //             Logger.error(`Record is empty ${JSON.stringify(i)}`, 'fill_options');
+        //         }
+        //     }
+        // }
         return [filled, updated];
     }
 }

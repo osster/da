@@ -32,15 +32,15 @@ export class SectionDTO implements Readonly<SectionDTO> {
 
     @ApiProperty({ required: true })
     @IsDate()
-    createdAt: Date;
+    created_at: Date;
 
     @ApiProperty({ required: true })
     @IsDate()
-    updatedAt: Date;
+    updated_at: Date;
 
     @ApiProperty({ required: false })
     @IsDate()
-    deletedAt: Date;
+    deleted_at: Date;
 
     public static fill(dto: Partial<SectionDTO>): SectionDTO {
         const obj = new SectionDTO();
@@ -50,9 +50,9 @@ export class SectionDTO implements Readonly<SectionDTO> {
         obj.description = dto.description;
         obj.pages = dto.pages;
         obj.site = dto.site;
-        obj.createdAt = dto.createdAt;
-        obj.updatedAt = dto.updatedAt;
-        obj.deletedAt = dto.deletedAt;
+        obj.created_at = dto.created_at;
+        obj.updated_at = dto.updated_at;
+        obj.deleted_at = dto.deleted_at;
         return obj;
     }
 
@@ -64,9 +64,9 @@ export class SectionDTO implements Readonly<SectionDTO> {
         obj.description = this.description;
         obj.pages = this.pages;
         obj.site = this.site;
-        obj.createdAt = this.createdAt || new Date();
-        obj.updatedAt = this.updatedAt || new Date();
-        obj.deletedAt = this.deletedAt || null;
+        obj.created_at = this.created_at || new Date();
+        obj.updated_at = this.updated_at || new Date();
+        obj.deleted_at = this.deleted_at || null;
         return obj;
     }
 }

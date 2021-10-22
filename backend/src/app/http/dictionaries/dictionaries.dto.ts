@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDate, IsInstance, IsString, IsUUID } from "class-validator";
 import { Option } from "../../models/options.entity";
-import { Dictionary } from "../../models/dictionary.entity";
+import { Dictionary } from "../../models/dictionaries.entity";
 import { Site } from "../../models/site.entity";
 
 export class DictionaryDTO implements Readonly<DictionaryDTO> {
@@ -20,15 +20,15 @@ export class DictionaryDTO implements Readonly<DictionaryDTO> {
 
     @ApiProperty({ required: true })
     @IsDate()
-    createdAt: Date;
+    created_at: Date;
 
     @ApiProperty({ required: true })
     @IsDate()
-    updatedAt: Date;
+    updated_at: Date;
 
     @ApiProperty({ required: false })
     @IsDate()
-    deletedAt: Date;
+    deleted_at: Date;
     
     @ApiProperty({ required: true })
     @IsInstance(Site)
@@ -46,9 +46,9 @@ export class DictionaryDTO implements Readonly<DictionaryDTO> {
         obj.name = dto.name;
         obj.site = dto.site;
         obj.option = dto.option;
-        obj.createdAt = dto.createdAt;
-        obj.updatedAt = dto.updatedAt;
-        obj.deletedAt = dto.deletedAt;
+        obj.created_at = dto.created_at;
+        obj.updated_at = dto.updated_at;
+        obj.deleted_at = dto.deleted_at;
         return obj;
     }
 
@@ -57,11 +57,9 @@ export class DictionaryDTO implements Readonly<DictionaryDTO> {
         obj.id = this.id;
         obj.key = this.key;
         obj.name = this.name;
-        obj.site = this.site;
-        obj.option = this.option;
-        obj.createdAt = this.createdAt || new Date();
-        obj.updatedAt = this.updatedAt || new Date();
-        obj.deletedAt = this.deletedAt || null;
+        obj.created_at = this.created_at || new Date();
+        obj.updated_at = this.updated_at || new Date();
+        obj.deleted_at = this.deleted_at || null;
         return obj;
     }
 }

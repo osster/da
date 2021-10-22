@@ -1,8 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsDate, IsEnum, IsInstance, IsNumber, IsString, IsUUID } from "class-validator";
-import { Site } from "./../../models/site.entity";
-import { Option, OptionType, OptionSegments } from "./../../models/options.entity";
-import { Section } from "../../models/sections.entity";
+import { Option, OptionType } from "../../models/options.entity";
+import { Dictionary } from "../../models/dictionaries.entity";
 
 export class OptionDTO implements Readonly<OptionDTO> {
 
@@ -28,10 +27,6 @@ export class OptionDTO implements Readonly<OptionDTO> {
   
     @ApiProperty({ required: false })
     @IsString()
-    dictionary_id: string;
-  
-    @ApiProperty({ required: false })
-    @IsString()
     bool_type: string;
   
     @ApiProperty({ required: false })
@@ -47,33 +42,20 @@ export class OptionDTO implements Readonly<OptionDTO> {
     operation: string;
     
     @ApiProperty({ required: false })
-    @IsEnum(OptionSegments)
-    enabled_in_segments: OptionSegments;
-  
-    @ApiProperty({ required: false })
-    @IsEnum(OptionSegments)
-    visible_in_segments: OptionSegments;
-
-
-    @ApiProperty({ required: true })
-    @IsInstance(Site)
-    site: Site;
-    
-    @ApiProperty({ required: false })
     @IsArray()
-    sections: Section[];
+    dictionary: Dictionary;
 
     @ApiProperty({ required: true })
     @IsDate()
-    createdAt: Date;
+    created_at: Date;
 
     @ApiProperty({ required: true })
     @IsDate()
-    updatedAt: Date;
+    updated_at: Date;
 
     @ApiProperty({ required: false })
     @IsDate()
-    deletedAt: Date;
+    deleted_at: Date;
 
     public static fill(dto: Partial<OptionDTO>): OptionDTO {
         const obj = new OptionDTO();
@@ -82,18 +64,14 @@ export class OptionDTO implements Readonly<OptionDTO> {
         obj.description = dto.description;
         obj.type = dto.type;
         obj.parameter_id = dto.parameter_id;
-        obj.dictionary_id = dto.dictionary_id;
         obj.bool_type = dto.bool_type;
         obj.unit = dto.unit;
         obj.ratio = dto.ratio;
         obj.operation = dto.operation;
-        obj.enabled_in_segments = dto.enabled_in_segments;
-        obj.visible_in_segments = dto.visible_in_segments;
-        obj.site = dto.site;
-        obj.sections = dto.sections;
-        obj.createdAt = dto.createdAt;
-        obj.updatedAt = dto.updatedAt;
-        obj.deletedAt = dto.deletedAt;
+        obj.dictionary = dto.dictionary;
+        obj.created_at = dto.created_at;
+        obj.updated_at = dto.updated_at;
+        obj.deleted_at = dto.deleted_at;
         return obj;
     }
 
@@ -104,18 +82,14 @@ export class OptionDTO implements Readonly<OptionDTO> {
         obj.description = this.description;
         obj.type = this.type;
         obj.parameter_id = this.parameter_id;
-        obj.dictionary_id = this.dictionary_id;
+        obj.dictionary = this.dictionary;
         obj.bool_type = this.bool_type;
         obj.unit = this.unit;
         obj.ratio = this.ratio;
         obj.operation = this.operation;
-        obj.enabled_in_segments = this.enabled_in_segments;
-        obj.visible_in_segments = this.visible_in_segments;
-        obj.site = this.site;
-        obj.sections = this.sections;
-        obj.createdAt = this.createdAt || new Date();
-        obj.updatedAt = this.updatedAt || new Date();
-        obj.deletedAt = this.deletedAt || null;
+        obj.created_at = this.created_at || new Date();
+        obj.updated_at = this.updated_at || new Date();
+        obj.deleted_at = this.deleted_at || null;
         return obj;
     }
 }

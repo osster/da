@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Dictionary } from '../../models/dictionary.entity';
+import { Dictionary } from '../../models/dictionaries.entity';
 import { Repository } from 'typeorm';
 import { DictionaryDTO } from './dictionaries.dto';
 
@@ -27,14 +27,14 @@ export class DictionariesService {
 
     public async update(id: string, dto: DictionaryDTO): Promise<DictionaryDTO> {
         const data = { ...dto };
-        data.updatedAt = new Date();
+        data.updated_at = new Date();
         const isUpdated = await this.repo.update(id, data);
         return DictionaryDTO.fill(await this.repo.findOne(id));
     }
 
     public async delete(id: string): Promise<boolean> {
         const obj = await this.repo.findOne(id);
-        obj.deletedAt = new Date();
+        obj.deleted_at = new Date();
         const res = await this.repo.save(obj);
         return true;
     }

@@ -33,3 +33,6 @@ yarn typeorm:migration:generate -- da_init
 ```bash
 yarn typeorm:migration:run
 ```
+
+## Schema
+https://dbdiagram.io/d/6171793b6239e146477c1a8c

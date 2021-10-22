@@ -11,7 +11,7 @@ import { OptionsService } from '../options/options.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Option } from '../../models/options.entity';
 import { DictionariesService } from '../dictionaries/dictionaries.service';
-import { Dictionary } from '../../models/dictionary.entity';
+import { Dictionary } from '../../models/dictionaries.entity';
 import { Site } from '../../models/site.entity';
 import { Section } from '../../models/sections.entity';
 import { SectionsModule } from '../sections/sections.module';
@@ -23,6 +23,8 @@ import { ParseOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catal
 import { ParseOnlinerCatalogPagesModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.pages';
 import { DbManageOnlinerCatalogItemsModule } from '../../libs/sources/onliner_catalog/db_manage.onliner.catalog.items';
 import { ScrapOnlinerCatalogDetailModule } from '../../libs/sources/onliner_catalog/scrap.onliner.catalog.detail';
+import { ParseOnlinerCatalogDetailModule } from '../../libs/sources/onliner_catalog/parse.onliner.catalog.detail';
+import { DbManageOnlinerCatalogOptionsModule } from '../../libs/sources/onliner_catalog/db_manage.onliner.catalog.options';
 
 @Module({
     imports: [
@@ -35,6 +37,8 @@ import { ScrapOnlinerCatalogDetailModule } from '../../libs/sources/onliner_cata
         ParseOnlinerCatalogOptionsModule,
         ParseOnlinerCatalogItemsModule,
         ParseOnlinerCatalogPagesModule,
+        ParseOnlinerCatalogDetailModule,
+        DbManageOnlinerCatalogOptionsModule,
         DbManageOnlinerCatalogItemsModule,
         BullModule.registerQueueAsync({
             name: 'queueScrap',

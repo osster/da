@@ -34,14 +34,14 @@ public async create(siteId: string, dto: SectionDTO): Promise<SectionDTO> {
 
 public async update(id: string, dto: SectionDTO): Promise<SectionDTO> {
     const data = { ...dto };
-    data.updatedAt = new Date();
+    data.updated_at = new Date();
     const isUpdated = await this.sectionRepo.update(id, data);
     return SectionDTO.fill(await this.sectionRepo.findOne(id));
 }
 
 public async delete(id: string): Promise<boolean> {
     const obj = await this.sectionRepo.findOne(id);
-    obj.deletedAt = new Date();
+    obj.deleted_at = new Date();
     const res = await this.sectionRepo.save(obj);
     return true;
 }

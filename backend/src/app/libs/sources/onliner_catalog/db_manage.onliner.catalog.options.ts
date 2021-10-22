@@ -1,7 +1,7 @@
-import { Injectable, Module } from "@nestjs/common";
+import { Injectable, Logger, Module } from "@nestjs/common";
 import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
 import { Connection, getConnection, QueryRunner, Repository } from "typeorm";
-import { Option } from "../../../models/options.entity";
+import { Option, OptionType } from "../../../models/options.entity";
 import { Section } from "../../../models/sections.entity";
 
 const crypto = require('crypto');
@@ -11,6 +11,7 @@ export class DbManageOnlinerCatalogOptions {
     private tableName: string;
     private columns: string[];
     private columnsQuery: {[key: string]: string};
+    private colsListPrepared: {[key: string]: any};
     private queryRunner: QueryRunner;
 
     constructor (
@@ -23,12 +24,23 @@ export class DbManageOnlinerCatalogOptions {
     }
 
     public async run(sectionId: string) {
-        const section = await this.sectionRepo.findOne({
+        Logger.debug(`DbManageOnlinerCatalogOptions ${sectionId}`, 'db_manage_options');
+        const sectionObj = await this.sectionRepo.findOne({
           where: { id: sectionId },
-          relations: ['site','options'],
+          relations: ['site', 'groups', 'groups.options'],
         });
-        this.prepareColumns(section.options);
-        this.tableName = `t_${crypto.createHash('md5').update(`${section.site.id}_${section.id}`).digest('hex')}`;
+        const options = [];
+        if (sectionObj && sectionObj.groups && sectionObj.groups.length) {
+            sectionObj.groups.forEach(group => {
+                group.options.forEach(option => {
+                    options.push(option);
+                });
+            });
+        }
+        // console.log({ options });
+        // TODO: make sure options distinct
+        this.prepareColumns(options);
+        this.tableName = `t_${crypto.createHash('md5').update(`${sectionObj.site.id}_${sectionObj.id}`).digest('hex')}`;
         if (!await this.isTableExists(this.tableName)) {
             await this.createTable(this.tableName);
         } else {
@@ -39,6 +51,29 @@ export class DbManageOnlinerCatalogOptions {
     private prepareColumns(options: Option[]) {
         this.columns = [];
         this.columnsQuery = {};
+        this.colsListPrepared = options.map(o => {
+            const name = o.parameter_id;
+            const isArray = o.type === OptionType.DICTIONARY ||
+                o.type === OptionType.DICTIONARY_RANGE || 
+                o.type === OptionType.NUMBER_RANGE;
+            const isString = false;
+            const isText = false;
+            const isNum = o.type === OptionType.NUMBER_RANGE;
+            const isBool = o.type === OptionType.BOOL;
+            const isDayeTime = false;
+            const isUuid = o.type === OptionType.DICTIONARY ||
+              o.type === OptionType.DICTIONARY_RANGE;
+            return {
+                name,
+                isArray,
+                isString,
+                isText,
+                isNum,
+                isBool,
+                isDayeTime,
+                isUuid,
+            }
+        });
         options.forEach((option: Option) => {
             this.columns.push(option.parameter_id); 
             let dataType = '';
@@ -46,14 +81,14 @@ export class DbManageOnlinerCatalogOptions {
                 case 'boolean':
                     dataType = 'boolean';
                     break;
-                case 'dictionary':
-                    dataType = 'uuid';
-                    break;
                 case 'number_range':
-                    dataType = 'numrange';
+                    dataType = 'numeric ARRAY';
+                    break;
+                case 'dictionary':
+                    dataType = 'uuid ARRAY';
                     break;
                 case 'dictionary_range':
-                    dataType = 'text ARRAY';
+                    dataType = 'uuid ARRAY';
                     break;
             }
             if (dataType != '') {
@@ -101,18 +136,63 @@ export class DbManageOnlinerCatalogOptions {
     private async updateTable(tableName: string) {
         const dbColumns = await this.queryRunner.query(`
             SELECT
-                column_name, data_type, column_default, is_nullable, character_maximum_length
+                column_name, data_type, udt_name, column_default, is_nullable, character_maximum_length
             FROM information_schema.columns
             WHERE table_name = '${tableName}';
         `);
+        // compare data types
+        const dbColsPrepared = dbColumns.map(c => {
+            const name = c.column_name;
+            const isArray = c.data_type === 'ARRAY';
+            const isBool = c.udt_name === 'bool';
+            const isDayeTime = c.udt_name === 'timestamptz';
+            const isString = c.udt_name === 'varchar';
+            const isNum = c.udt_name === 'numeric' || c.udt_name === '_numeric';
+            const isText = c.udt_name === 'text' || c.udt_name === '_text';
+            const isUuid = c.udt_name === 'uuid' || c.udt_name === '_uuid';
+            return {
+                name,
+                isArray,
+                isString,
+                isText,
+                isNum,
+                isBool,
+                isDayeTime,
+                isUuid,
+            }
+        });
+        const dbColsDirty = this.colsListPrepared.filter(c => {
+            const dbColPrepared = dbColsPrepared.find(cp => cp.name === c.name);
+            return dbColPrepared && (
+                dbColPrepared.isArray !== c.isArray ||
+                dbColPrepared.isString !== c.isString ||
+                dbColPrepared.isText !== c.isText ||
+                dbColPrepared.isNum !== c.isNum ||
+                dbColPrepared.isBool !== c.isBool ||
+                dbColPrepared.isDayeTime !== c.isDayeTime ||
+                dbColPrepared.isUuid !== c.isUuid
+            );
+        });
         const dbc = dbColumns.map(c => c.column_name);
         const newColumns = this.columns.filter(c => !dbc.includes(c));
-        if (newColumns.length) {
-            // TODO: ALTER TABLE...
-            const newColumnsQuery = Object.keys(this.columnsQuery)
-                .filter(k => newColumns.includes(k))
-                .map(k => dbColumns[k]);
-            console.log('ALTER TABLE', { tableName, newColumns, newColumnsQuery });
+        const addColumns = Object.keys(this.columnsQuery)
+            .filter(k => newColumns.includes(k))
+            .map(k => `ADD COLUMN  ${this.columnsQuery[k]}`);
+        const updColumns = dbColsDirty.map(c => {
+            let type = [];
+            if (c.isBool) type.push('boolean');
+            if (c.isUuid) type.push('UUID');
+            if (c.isText) type.push('TEXT');
+            if (c.isNum) type.push('NUMERIC');
+            if (c.isString) type.push('VARCHAR');
+            if (c.isDayeTime) type.push('timestamptz');
+            if (c.isArray) type.push('ARRAY');
+            return `ALTER COLUMN ${c.name} TYPE ${type.join(' ')}`;
+        });
+        if (addColumns.length || updColumns.length) {
+            const alterSql = `ALTER TABLE ${tableName} ${addColumns.join(', ')} ${updColumns.join(', ')};`;
+            console.log({ alterSql });
+            await this.queryRunner.query(alterSql);
         }
     }
 };

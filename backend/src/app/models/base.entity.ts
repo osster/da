@@ -5,20 +5,11 @@ export abstract class BaseEntity {
     id: string;
 
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
+    created_at: Date;
 
     @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-    updatedAt: Date;
+    updated_at: Date;
 
     @DeleteDateColumn({ type: 'timestamptz', nullable: true, default: () => 'NULL' })
-    deletedAt: Date;
-
-    // @Column({ type: 'varchar', length: 300, nullable: true })
-    // internalComment: string | null;
-
-    // @Column({ type: 'varchar', length: 300, nullable: true })
-    // createdBy: string | null;
-
-    // @Column({ type: 'varchar', length: 300, nullable: true })
-    // lastChangedBy: string | null;
+    deleted_at: Date;
 }

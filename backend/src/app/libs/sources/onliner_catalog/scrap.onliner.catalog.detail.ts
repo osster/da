@@ -8,43 +8,51 @@ import { Site } from '../../../models/site.entity';
 const moment = require('moment');
 const crypto = require('crypto');
 
+export interface ScrapOnlinerCatalogDetailArgs {
+    siteId: string,
+    sectionId: string,
+    itemId: string,
+    url: string,
+    index: number,
+    total: number
+};
+
 @Injectable()
 export class ScrapOnlinerCatalogDetail {
+    private items: any[] = [];
     constructor(
         @InjectRepository(Site)
         private readonly siteRepo: Repository<Site>,
         @InjectRepository(Section)
         private readonly sectionRepo: Repository<Section>,
-    ) {}
+    ) { }
 
     public async run(
         siteId: string,
         sectionId: string,
-        itemId: string
+        itemId: string,
+        url: string,
+        index: number,
+        total: number,
     ) {
         try {
-            const connection: Connection = getConnection();
-            const queryRunner = connection.createQueryRunner();
-            await queryRunner.connect();
-            const tableName = `t_${crypto.createHash('md5').update(`${siteId}_${sectionId}`).digest('hex')}`;
-            const items = await queryRunner.query(`
-                SELECT *
-                FROM ${tableName}
-                WHERE id = '${itemId}';
-            `);
-            if (items.length === 0) {
-                throw new Error(`Item '${itemId}' not foind at '${tableName}'`);
-            }
-            const item = items[0];
-            const html = await getHtml(item.html_url);
+            console.log({
+                siteId,
+                sectionId,
+                itemId,
+                url,
+                index,
+                total,
+            });
+            const html = await getHtml(url);
             const date = moment().format('YYYYMMDD');
             const filePath = storeHtml(html, `${date}_${itemId}_onliner_catalog_detail`);
-            return { 
+            return {
                 siteId,
                 sectionId,
                 itemId,
                 filePath,
-                url: item.html_url,
+                url,
             };
         } catch (e) {
             console.error(e);
@@ -66,4 +74,4 @@ export class ScrapOnlinerCatalogDetail {
         ScrapOnlinerCatalogDetail,
     ]
 })
-export class ScrapOnlinerCatalogDetailModule {}
+export class ScrapOnlinerCatalogDetailModule { }

@@ -9,7 +9,7 @@ export class DbManageOnlinerCatalogItems {
     constructor () {}
 
     public async run(siteId: string, sectionId: string, items: ParsedOnlinerCatalogItem[]) {
-        Logger.debug(`DbManageOnlinerCatalogItems run ${siteId}, ${sectionId}, ${items.length}`, 'queue_db_manage');
+        // Logger.debug(`DbManageOnlinerCatalogItems run ${siteId}, ${sectionId}, ${items.length}`, 'job_dbmanage_items');
     }
 };
 

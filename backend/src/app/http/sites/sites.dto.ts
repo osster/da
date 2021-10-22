@@ -12,13 +12,13 @@ export class SiteDTO implements Readonly<SiteDTO> {
     @IsString()
     name: string;
 
-    @ApiProperty({ required: true })
-    @IsString()
-    host: string;
-
     @ApiProperty({ required: false })
     @IsString()
     description: string;
+
+    @ApiProperty({ required: true })
+    @IsString()
+    host: string;
 
     @ApiProperty({ required: false })
     @IsEnum(SiteType)
@@ -26,15 +26,15 @@ export class SiteDTO implements Readonly<SiteDTO> {
 
     @ApiProperty({ required: true })
     @IsDate()
-    createdAt: Date;
+    created_at: Date;
 
     @ApiProperty({ required: true })
     @IsDate()
-    updatedAt: Date;
+    updated_at: Date;
 
     @ApiProperty({ required: false })
     @IsDate()
-    deletedAt: Date;
+    deleted_at: Date;
 
     public static fill(dto: Partial<SiteDTO>): SiteDTO {
         const obj = new SiteDTO();
@@ -43,9 +43,9 @@ export class SiteDTO implements Readonly<SiteDTO> {
         obj.host = dto.host;
         obj.description = dto.description;
         obj.type = dto.type;
-        obj.createdAt = dto.createdAt;
-        obj.updatedAt = dto.updatedAt;
-        obj.deletedAt = dto.deletedAt;
+        obj.created_at = dto.created_at;
+        obj.updated_at = dto.updated_at;
+        obj.deleted_at = dto.deleted_at;
         return obj;
     }
 
@@ -56,9 +56,9 @@ export class SiteDTO implements Readonly<SiteDTO> {
         obj.host = this.host;
         obj.description = this.description;
         obj.type = this.type;
-        obj.createdAt = this.createdAt || new Date();
-        obj.updatedAt = this.updatedAt || new Date();
-        obj.deletedAt = this.deletedAt || null;
+        obj.created_at = this.created_at || new Date();
+        obj.updated_at = this.updated_at || new Date();
+        obj.deleted_at = this.deleted_at || null;
         return obj;
     }
 }

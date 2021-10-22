@@ -1,13 +1,15 @@
 import { Injectable, Logger, Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
 import { Site } from "../../../models/site.entity";
 import { Section } from "../../../models/sections.entity";
-import { Option } from "../../../models/options.entity";
-import { Dictionary } from "../../../models/dictionary.entity";
+import { Option, OptionType } from "../../../models/options.entity";
+import { Dictionary } from "../../../models/dictionaries.entity";
+import { Group } from "../../../models/groups.entity";
 import { OptionDTO } from "../../../http/options/options.dto";
 import { OptionsService } from "../../../http/options/options.service";
-import { DictionaryDTO } from "../../../http/dictionaries/dictionaries.dto";
 import { DictionariesService } from "../../../http/dictionaries/dictionaries.service";
+import { DictionaryItem } from "../../../models/dictionary_items.entity";
+import { Connection, getConnection, In, Repository } from "typeorm";
 
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +19,18 @@ export class ParseOnlinerCatalogOptions {
     constructor(
         private optionsSrv: OptionsService,
         private dictionariesSrv: DictionariesService,
+        @InjectRepository(Site)
+        private readonly siteRepo: Repository<Site>,
+        @InjectRepository(Section)
+        private readonly sectionRepo: Repository<Section>,
+        @InjectRepository(Dictionary)
+        private readonly dictionaryRepo: Repository<Dictionary>,
+        @InjectRepository(DictionaryItem)
+        private readonly dictionaryItemRepo: Repository<DictionaryItem>,
+        @InjectRepository(Group)
+        private readonly groupRepo: Repository<Group>,
+        @InjectRepository(Option)
+        private readonly optionRepo: Repository<Option>,
     ) {}
 
     public run(siteId: string, sectionId: string, filePath: string) {
@@ -41,50 +55,99 @@ export class ParseOnlinerCatalogOptions {
         options: {[key: string]: string}[],
         dictionaries: {[key: string]: any}[],
     ) {
-        const optionsData =  (options && options.length)
-            ? options.map((o) => {
-                return OptionDTO.fill({
-                    ...o,
-                    site: siteId,
-                    sections: [sectionId],
+        const siteObj = await this.siteRepo.findOneOrFail(siteId);
+        const sectionObj = await this.sectionRepo.findOneOrFail({
+            where: {
+                id: sectionId
+            },
+            relations: ['groups'],
+        });
+        
+        // Dictionaries
+        let itemsCount = 0;
+        let addedToDefaultGroupOptionsCount = 0;
+        for(const dictionary of dictionaries) {
+            let dictionaryObj = await this.dictionaryRepo.findOne({
+                where: {
+                    site: siteObj,
+                    key: dictionary.key
+                }
+            });
+            if (!dictionaryObj) {
+                dictionaryObj = await this.dictionaryRepo.save({
+                    site: siteObj,
+                    key: dictionary.key,
+                    name: dictionary.key,
                 });
-            }) 
-            : [];
-        if (optionsData.length) {
-            const res = await this.optionsSrv.fill(siteId, optionsData);
-            Logger.verbose(`Stored ${res[0]} options, updated ${res[1]}.`, 'store');
-        }
-
-        const dictionariesData = [];
-        if (dictionaries && dictionaries.length) {
-            const options = await this.optionsSrv.getByParameterIdIn(siteId, dictionaries.map(d => d.key));
-            dictionaries
-                .map((d) => {
-                    const opt = options.find(o => o.parameter_id === d.key);
-                    d.site = siteId;
-                    d.option = opt ? opt.id : null;
-                    return d;
-                })
-                .filter(d => d.option !== null)
-                .forEach((d) => {
-                    if (d.values && d.values.length) { 
-                        d.values.forEach((dv) => {
-                            dictionariesData.push({
-                                key: dv.id,
-                                name: dv.name,
-                                site: d.site,
-                                option: d.option, 
-                            });
-                        });
-                    } else {
-                        Logger.error(`dictionary values not found.`, 'scan');
+            }
+            for (const dictionaryItem of dictionary.values) {
+                let dictionaryItemObj = await this.dictionaryItemRepo.findOne({
+                    where: {
+                        dictionary: dictionaryObj,
+                        key: dictionaryItem.id
                     }
                 });
+                if (!dictionaryItemObj) {
+                    dictionaryItemObj = await this.dictionaryItemRepo.save({
+                        dictionary: dictionaryObj,
+                        key: dictionaryItem.id,
+                        name: dictionaryItem.name,
+                    });
+                    itemsCount++;
+                }
+            }
         }
-        if (dictionariesData.length) {
-            const res = await this.dictionariesSrv.fill(siteId, dictionariesData);
-            Logger.verbose(`Stored ${res[0]} dictionaries, updated ${res[1]}.`, 'store');
+        Logger.verbose(`Stored ${itemsCount} items at ${dictionaries.length} dictionaries.`, 'store_options');
+
+        let optionsCount = 0;
+        for (const option of options) {
+            const dictionaryObj = await this.getDictionary(siteObj, option);
+
+            let optionObj = await this.optionRepo.findOne({
+                where: {
+                    parameter_id: option.parameter_id,
+                },
+            });
+            if (!optionObj) {
+                let type;
+                switch (option.type) {
+                    case 'boolean':
+                        type = OptionType.BOOL;
+                        break;
+                    case 'dictionary':
+                        type = OptionType.DICTIONARY;
+                        break;
+                    case 'dictionary_range':
+                        type = OptionType.DICTIONARY_RANGE;
+                        break;
+                    case 'number_range':
+                        type = OptionType.NUMBER_RANGE;
+                        break;
+                }
+                optionObj = await this.optionRepo.save({
+                    name: option.name,
+                    description: option.description,
+                    type,
+                    parameter_id: option.parameter_id,
+                    dictionary: dictionaryObj,
+                    bool_type: option.bool_type,
+                    unit: option.unit,
+                    ratio: !!option.ratio ? parseInt(option.ratio) : null,
+                    operation: option.operation,
+                });
+                optionsCount++;
+            }
+
+            const defaultGroupObj = await this.getOrCreateDefaultGroup(siteObj, sectionObj);
+            if (defaultGroupObj && defaultGroupObj.options.filter(o => o.id === optionObj.id).length === 0) {
+                defaultGroupObj.options.push(optionObj);
+                const connection: Connection = getConnection();
+                connection.manager.save(defaultGroupObj);
+                addedToDefaultGroupOptionsCount++;
+            }
+            optionObj = undefined;
         }
+        Logger.verbose(`Stored ${optionsCount} options, added to default group ${addedToDefaultGroupOptionsCount}.`, 'store_options');
     }
 
     private getOptions(json) {
@@ -142,6 +205,43 @@ export class ParseOnlinerCatalogOptions {
             });
         return dictionaries;
     }
+
+    private async getOrCreateDefaultGroup(siteObj: Site, sectionObj: Section): Promise<Group> {
+        let defaultGroup = await this.groupRepo.findOne({
+            where: {
+                site: siteObj,
+                name: 'Default',
+            },
+            relations: ['options']
+        });
+        if (!defaultGroup) {
+            defaultGroup = await this.groupRepo.save({
+                site: siteObj,
+                name: 'Default',
+            });
+            sectionObj.groups.push(defaultGroup);
+            const connection: Connection = getConnection();
+            connection.manager.save(sectionObj);
+        }
+        defaultGroup = await this.groupRepo.findOne({
+            where: {
+                site: siteObj,
+                name: 'Default',
+            },
+            relations: ['options']
+        });
+        return defaultGroup;
+    }
+
+    private async getDictionary(siteObj: Site, option: {[key: string]: any}): Promise<Dictionary | null> {
+        return !!option.dictionary_id 
+        ? await this.dictionaryRepo.findOne({
+            where: { 
+                site: siteObj,
+                key: option.dictionary_id
+            }
+        }) : null;
+    }
 }
 
 @Module({
@@ -149,8 +249,10 @@ export class ParseOnlinerCatalogOptions {
         TypeOrmModule.forFeature([
             Site,
             Section,
+            Group,
             Option,
             Dictionary,
+            DictionaryItem,
         ]),
     ],
     providers: [

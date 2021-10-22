@@ -34,6 +34,7 @@
     "@nestjs/typeorm": "^8.0.2",
     "axios": "^0.22.0",
     "bull": "^3.29.2",
+    "cheerio": "^1.0.0-rc.10",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "dotenv": "^10.0.0",
