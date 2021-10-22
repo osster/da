@@ -86,7 +86,7 @@ export class ActionsController {
                 );
                 i++;
                 delay++;
-                if (delay === 100) return;
+                if (delay === 10) return;
             }
         }
         return { siteId }

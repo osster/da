@@ -91,7 +91,7 @@ export class ParseOnlinerCatalogOptions {
                     dictionaryItemObj = await this.dictionaryItemRepo.save({
                         dictionary: dictionaryObj,
                         key: dictionaryItem.id,
-                        name: dictionaryItem.name,
+                        name: dictionaryItem.name.replace(/&quot;/g, '"'),
                     });
                     itemsCount++;
                 }
@@ -203,6 +203,12 @@ export class ParseOnlinerCatalogOptions {
                     values: json.dictionaries[k],
                 });
             });
+        dictionaries.map(d => {
+            d.values.map(v => ({
+                id: v.id,
+                name: v.name.trim(),
+            }));
+        });
         return dictionaries;
     }
 

@@ -33,12 +33,12 @@ export class DbManageOnlinerCatalogOptions {
         if (sectionObj && sectionObj.groups && sectionObj.groups.length) {
             sectionObj.groups.forEach(group => {
                 group.options.forEach(option => {
-                    options.push(option);
+                    if (!options.find(o => o.id === option.id)) {
+                        options.push(option);
+                    }
                 });
             });
         }
-        // console.log({ options });
-        // TODO: make sure options distinct
         this.prepareColumns(options);
         this.tableName = `t_${crypto.createHash('md5').update(`${sectionObj.site.id}_${sectionObj.id}`).digest('hex')}`;
         if (!await this.isTableExists(this.tableName)) {
@@ -191,7 +191,7 @@ export class DbManageOnlinerCatalogOptions {
         });
         if (addColumns.length || updColumns.length) {
             const alterSql = `ALTER TABLE ${tableName} ${addColumns.join(', ')} ${updColumns.join(', ')};`;
-            console.log({ alterSql });
+            // console.log({ alterSql });
             await this.queryRunner.query(alterSql);
         }
     }
