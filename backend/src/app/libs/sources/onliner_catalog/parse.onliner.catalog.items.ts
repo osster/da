@@ -9,15 +9,10 @@ const path = require('path');
 const crypto = require('crypto');
 
 export interface ParsedOnlinerCatalogItem {
-    _id: string,
     key: string,
     name: string,
-    full_name: string,
-    name_prefix: string,
     images: string[],
     description: string,
-    micro_description: string,
-    html_url: string,
     url: string,
 };
 
@@ -48,16 +43,11 @@ export class ParseOnlinerCatalogItems {
                         const p = json.products[k];
                         if (p) {
                             items.push({
-                                _id: p.id,
-                                key: p.key,
+                                key: p.id,
                                 name: p.name,
-                                full_name: p.full_name,
-                                name_prefix: p.name_prefix,
                                 images: p.images && p.images.header ? [p.images.header] : [],
                                 description: p.description,
-                                micro_description: p.micro_description,
-                                html_url: p.html_url,
-                                url: p.url,
+                                url: p.html_url,
                             });
                         } else {
                             Logger.error(`Product ${k} not found.`, 'job_parse');
@@ -89,9 +79,9 @@ export class ParseOnlinerCatalogItems {
                 where: { id: sectionId },
                 relations: ['site'],
             });
-            this.tableName = `t_${crypto.createHash('md5').update(`${section.site.id}_${section.id}`).digest('hex')}`;
+            this.tableName = `t_${crypto.createHash('md5').update(`${section.id}`).digest('hex')}`;
             items.forEach(async (i) => {
-                const row = await this.isRecordExists(this.tableName, i._id);
+                const row = await this.isRecordExists(this.tableName, i.key);
                 if (!row) {
                     // insert
                     await this.createRecord(this.tableName, i);
@@ -118,7 +108,7 @@ export class ParseOnlinerCatalogItems {
         const row = await this.queryRunner.query(`
             SELECT *
             FROM ${tableName}
-            WHERE _id = '${id}';
+            WHERE key = '${id}';
           `);
         return row.length > 0 ? row[0] : false;
     }
@@ -129,16 +119,11 @@ export class ParseOnlinerCatalogItems {
 
     private async createRecord(tableName: string, row: ParsedOnlinerCatalogItem) {
         const columnsQuery = {
-            _id: `'${row._id}'`,
             key: `'${row.key}'`,
             url: `'${row.url}'`,
-            html_url: `'${row.html_url}'`,
             name: `'${row.name}'`,
-            full_name: `'${row.full_name}'`,
-            name_prefix: `'${row.name_prefix}'`,
             images: `'${ParseOnlinerCatalogItems.prepareDbArray(row.images)}'`,
             description: `'${row.description}'`,
-            micro_description: `'${row.micro_description}'`,
         };
         const queryStr = `
             INSERT INTO "${tableName}" (
@@ -163,16 +148,11 @@ export class ParseOnlinerCatalogItems {
 
     private getDirty(old, item: ParsedOnlinerCatalogItem): {query: string, values: string[]} {
         const columns = [
-            "_id",
             "key",
             "url",
-            "html_url",
             "name",
-            "full_name",
-            "name_prefix",
             "images",
             "description",
-            "micro_description",
         ];
         const query = [];
         const values = [];

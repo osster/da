@@ -56,7 +56,7 @@ export class ParseService {
 
   @Process('jobParseOnlinerCatalogPages')
   async jobParseOnlinerCatalogPages(job: Job<{ siteId: string, sectionId: string, filePath: string }>) {
-    Logger.verbose(`jobParseOnlinerCatalogItems ${job.data.filePath} (pid ${process.pid})`, `job_parse`);
+    Logger.verbose(`jobParseOnlinerCatalogPages ${job.data.filePath} (pid ${process.pid})`, `job_parse`);
     const data = this.parseOnlinerCatalogPages.run(
       job.data.siteId,
       job.data.sectionId,
@@ -67,7 +67,7 @@ export class ParseService {
 
   @Process('jobParseOnlinerCatalogDetail')
   async jobParseOnlinerCatalogDetail(job: Job<ParseOnlinerCatalogDetailArgs>) {
-    Logger.verbose(`jobParseOnlinerCatalogItems ${job.data.index} of ${job.data.total} ${job.data.filePath} (pid ${process.pid})`, `job_parse`);
+    Logger.verbose(`jobParseOnlinerCatalogDetail ${job.data.index} of ${job.data.total} ${job.data.filePath} (pid ${process.pid})`, `job_parse`);
     const data = this.parseOnlinerCatalogDetail.run(
       job.data.siteId,
       job.data.sectionId,

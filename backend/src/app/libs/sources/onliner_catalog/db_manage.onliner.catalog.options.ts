@@ -119,14 +119,9 @@ export class DbManageOnlinerCatalogOptions {
           "_id" character varying(300) NOT NULL,
           "key" character varying(300) NOT NULL,
           "url" character varying(300) NOT NULL,
-          "html_url" character varying(300) NOT NULL,
           "name" character varying(300) NOT NULL,
-          "full_name" character varying(300) NOT NULL,
-          "name_prefix" character varying(300) NOT NULL,
-          "images" text ARRAY NULL,
           "description" text NULL,
-          "micro_description" text NULL,
-          ${Object.values(this.columnsQuery).join(',')},
+          "images" text ARRAY NULL,
           CONSTRAINT "PK_${hash}" PRIMARY KEY ("id")
         )
       `);

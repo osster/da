@@ -36,14 +36,6 @@ export class ScrapOnlinerCatalogDetail {
         total: number,
     ) {
         try {
-            console.log({
-                siteId,
-                sectionId,
-                itemId,
-                url,
-                index,
-                total,
-            });
             const html = await getHtml(url);
             const date = moment().format('YYYYMMDD');
             const filePath = storeHtml(html, `${date}_${itemId}_onliner_catalog_detail`);

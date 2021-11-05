@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Connection, getConnection, QueryRunner, Repository } from 'typeorm';
 import { Section } from '../../models/sections.entity';
-import { Connection, ConnectionManager, getConnection, Repository } from 'typeorm';
-import { SectionDTO } from './sections.dto';
 import { Site } from '../../models/site.entity';
+import { SectionDTO } from './sections.dto';
+
+const crypto = require('crypto');
 
 @Injectable()
 export class SectionsService {
@@ -28,8 +30,33 @@ public async create(siteId: string, dto: SectionDTO): Promise<SectionDTO> {
         ...dto,
         site: site,
     });
-    // await this.connection.manager.save(section);
+    // Create items table
+    await this.createItemsTable(section.id);
     return SectionDTO.fill(section);
+}
+
+private async createItemsTable(sectionId: string) {
+    const queryRunner: QueryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    const tableName = `t_${crypto.createHash('md5').update(`${sectionId}`).digest('hex')}`;
+    const hash = crypto.createHash('md5').update(tableName).digest('hex');
+    await queryRunner.query(`
+        CREATE TABLE "${tableName}" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        "deleted_at" TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+        "key" character varying(300) NOT NULL,
+        "url" character varying(300) NOT NULL,
+        "name" character varying(300) NOT NULL,
+        "description" text NULL,
+        "images" text ARRAY NULL,
+        "parsed_at" TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+        "raw" json DEFAULT NULL,
+        CONSTRAINT "PK_${hash}" PRIMARY KEY ("id")
+        )
+    `);
+  await queryRunner.query(`CREATE INDEX "IDX_${tableName}_key" ON "${tableName}" ("key");`);
 }
 
 public async update(id: string, dto: SectionDTO): Promise<SectionDTO> {

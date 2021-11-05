@@ -5,7 +5,6 @@ import { Section } from "../../../models/sections.entity";
 import { Option, OptionType } from "../../../models/options.entity";
 import { Dictionary } from "../../../models/dictionaries.entity";
 import { Group } from "../../../models/groups.entity";
-import { OptionDTO } from "../../../http/options/options.dto";
 import { OptionsService } from "../../../http/options/options.service";
 import { DictionariesService } from "../../../http/dictionaries/dictionaries.service";
 import { DictionaryItem } from "../../../models/dictionary_items.entity";

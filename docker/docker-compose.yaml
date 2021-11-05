@@ -51,7 +51,7 @@ services:
     environment: 
       TS_NODE_TRANSPILE_ONLY: "true"
     volumes:
-      - /d/dev/projects/da/backend:/var/www
+      - ${APP_SRC}:/var/www
     depends_on:
       - da_db
       - da_redis

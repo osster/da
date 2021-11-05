@@ -61,7 +61,7 @@ export class ActionsController {
         });
         let delay = 0;
         for (const section of sections) {
-            const tableName = `t_${crypto.createHash('md5').update(`${section.site.id}_${section.id}`).digest('hex')}`;
+            const tableName = `t_${crypto.createHash('md5').update(`${section.id}`).digest('hex')}`;
             const items = await queryRunner.query(`
                 SELECT *
                 FROM ${tableName};
@@ -75,7 +75,7 @@ export class ActionsController {
                         siteId,
                         sectionId: section.id,
                         itemId: item.id,
-                        url: item.html_url,
+                        url: item.url,
                         index: i,
                         total,
                     },
@@ -86,7 +86,7 @@ export class ActionsController {
                 );
                 i++;
                 delay++;
-                if (delay === 10) return;
+                // if (delay === 100) return;
             }
         }
         return { siteId }
