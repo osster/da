@@ -46,7 +46,8 @@ private async createItemsTable(sectionId: string) {
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "deleted_at" TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-        "key" character varying(300) NOT NULL,
+        "item_id" character varying(300) NOT NULL,
+        "item_key" character varying(300) NOT NULL,
         "url" character varying(300) NOT NULL,
         "name" character varying(300) NOT NULL,
         "description" text NULL,
@@ -56,7 +57,8 @@ private async createItemsTable(sectionId: string) {
         CONSTRAINT "PK_${hash}" PRIMARY KEY ("id")
         )
     `);
-  await queryRunner.query(`CREATE INDEX "IDX_${tableName}_key" ON "${tableName}" ("key");`);
+    await queryRunner.query(`CREATE INDEX "IDX_${tableName}_item_id" ON "${tableName}" ("item_id");`);
+    await queryRunner.query(`CREATE INDEX "IDX_${tableName}_item_key" ON "${tableName}" ("item_key");`);
 }
 
 public async update(id: string, dto: SectionDTO): Promise<SectionDTO> {

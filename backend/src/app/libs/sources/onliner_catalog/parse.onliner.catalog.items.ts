@@ -9,7 +9,8 @@ const path = require('path');
 const crypto = require('crypto');
 
 export interface ParsedOnlinerCatalogItem {
-    key: string,
+    item_id: string,
+    item_key: string,
     name: string,
     images: string[],
     description: string,
@@ -43,7 +44,8 @@ export class ParseOnlinerCatalogItems {
                         const p = json.products[k];
                         if (p) {
                             items.push({
-                                key: p.id,
+                                item_id: p.id,
+                                item_key: p.key,
                                 name: p.name,
                                 images: p.images && p.images.header ? [p.images.header] : [],
                                 description: p.description,
@@ -81,7 +83,7 @@ export class ParseOnlinerCatalogItems {
             });
             this.tableName = `t_${crypto.createHash('md5').update(`${section.id}`).digest('hex')}`;
             items.forEach(async (i) => {
-                const row = await this.isRecordExists(this.tableName, i.key);
+                const row = await this.isRecordExists(this.tableName, i.item_id, i.item_key);
                 if (!row) {
                     // insert
                     await this.createRecord(this.tableName, i);
@@ -104,11 +106,11 @@ export class ParseOnlinerCatalogItems {
         fs.unlinkSync(filePath);
     }
 
-    private async isRecordExists(tableName: string, id: string) {
+    private async isRecordExists(tableName: string, id: string, key: string) {
         const row = await this.queryRunner.query(`
             SELECT *
             FROM ${tableName}
-            WHERE key = '${id}';
+            WHERE item_id = '${id}' AND item_key = '${key}';
           `);
         return row.length > 0 ? row[0] : false;
     }
@@ -119,7 +121,8 @@ export class ParseOnlinerCatalogItems {
 
     private async createRecord(tableName: string, row: ParsedOnlinerCatalogItem) {
         const columnsQuery = {
-            key: `'${row.key}'`,
+            item_id: `'${row.item_id}'`,
+            item_key: `'${row.item_key}'`,
             url: `'${row.url}'`,
             name: `'${row.name}'`,
             images: `'${ParseOnlinerCatalogItems.prepareDbArray(row.images)}'`,
@@ -148,7 +151,8 @@ export class ParseOnlinerCatalogItems {
 
     private getDirty(old, item: ParsedOnlinerCatalogItem): {query: string, values: string[]} {
         const columns = [
-            "key",
+            "item_id",
+            "item_key",
             "url",
             "name",
             "images",
