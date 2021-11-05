@@ -19,8 +19,19 @@ export async function getHtml (url: string): Promise<any> {
 }
 
 export async function getJson (url: string): Promise<string> {
+    // const proxy = {
+    //     protocol: 'https',
+    //     host: '127.0.0.1',
+    //     port: 9000,
+    //     auth: {
+    //         username: 'mikeymike',
+    //         password: 'rapunz3l'
+    //     }
+    // };
     const data = await axios
-        .get(url)
+        .get(url/*, {
+            proxy
+        }*/)
         .then(res => {
             return res.data;
         })
