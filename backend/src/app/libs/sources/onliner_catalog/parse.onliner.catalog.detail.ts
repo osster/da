@@ -1,5 +1,8 @@
+import { BullModule, InjectQueue } from "@nestjs/bull";
 import { Logger, Module } from "@nestjs/common";
 import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
+import { Queue } from "bull";
+import { configService } from "../../../../config/config.service";
 import { Connection, getConnection, QueryRunner, Repository } from "typeorm";
 import { Section } from "../../../models/sections.entity";
 
@@ -31,6 +34,8 @@ export class ParseOnlinerCatalogDetail {
     private queryRunner: QueryRunner;
 
     constructor(
+        @InjectQueue('queueScrap')
+        private readonly queueScrap: Queue,
         @InjectRepository(Section)
         private readonly sectionRepo: Repository<Section>,
     ) {
@@ -45,27 +50,45 @@ export class ParseOnlinerCatalogDetail {
         let html = fs.readFileSync(baseDir);
         const gallery = [];
         let options = [];
+        let variants = [];
 
         if (html.length) {
             try {
                 const $ = cheerio.load(html);
                 const elGallery = $('#product-gallery .product-gallery__thumbs .product-gallery__shaft');
-                const elSpecs = $('.product-specs__table');
-                elSpecs.find('tr:not(.product-specs__table-title)')
-                    .each(function (i) {
+                const elSpecs = $('.product-specs__table tbody');
+                const name = $('.catalog-masthead__title').text().trim();
+                const description = $('.offers-description__specs').text().trim();
+                const preview = $('.offers-description__preview .offers-description__image').attr('src');
+                
+                // Item offers (variants)
+                $('a.offers-description-filter-control')
+                    .each(function () {
                         const el = $(this);
-                        el.find('td:first .product-tip-wrapper').remove();
-                        const label = el.find('td:first').text().trim();
-                        const txt = el.find('.value__text').text().trim();
-                        const yes = el.find('.i-x').length > 0;
-                        const no = el.find('.i-tip').length > 0;
-                        const row = {
-                            label,
-                            text: txt,
-                            is_checked: (yes || no) ? yes : null,
-                        };
-                        options.push(row);
+                        variants.push(el.attr('href'));
                     });
+                // Groups and options
+                elSpecs.each(function() {
+                    const el = $(this);
+                    const groupName = el.find('tr.product-specs__table-title .product-specs__table-title-inner').text().trim();
+                    el.find('tr:not(.product-specs__table-title)')
+                        .each(function () {
+                            const el = $(this);
+                            el.find('td:first .product-tip-wrapper').remove();
+                            const label = el.find('td:first').text().trim();
+                            const txt = el.find('.value__text').text().trim();
+                            const yes = el.find('.i-x').length > 0;
+                            const no = el.find('.i-tip').length > 0;
+                            const row = {
+                                group: groupName,
+                                label,
+                                text: txt,
+                                is_checked: (yes || no) ? yes : null,
+                            };
+                            options.push(row);
+                        });
+                });
+                // Item gallery
                 elGallery.find('.product-gallery__thumb')
                     .each(function (i) {
                         const el = $(this);
@@ -77,8 +100,15 @@ export class ParseOnlinerCatalogDetail {
                             gallery.push(row);
                         }
                     });
-                const jsonData: string = JSON.stringify({ options, gallery });
+                const jsonData = {
+                    name,
+                    description,
+                    preview,
+                    options,
+                    gallery
+                };
                 await this.store(sectionId, itemId, jsonData);
+                await this.addItemVariants(siteId, sectionId, itemId, variants);
                 fs.unlinkSync(filePath);
             } catch (e) {
                 Logger.error('Parsing Onliner catalog detail fails.', 'job_parse');
@@ -106,7 +136,12 @@ export class ParseOnlinerCatalogDetail {
             const old = await this.isRecordExists(this.tableName, itemId);
             if (old) {
                 // update
-                const dirty = this.getDirty(old, { raw: item });
+                const dirty = this.getDirty(old, {
+                    name: item.name,
+                    description: item.description,
+                    images: ParseOnlinerCatalogDetail.prepareDbArray([item.preview]),
+                    raw: JSON.stringify(item)
+                });
                 if (Object.keys(dirty).length > 0) {
                     dirty['parsed_at'] = 'parsed_at = now()';
                     await this.updateRecord(this.tableName, old.id, dirty);
@@ -156,6 +191,63 @@ export class ParseOnlinerCatalogDetail {
         });
         return dirty;
     }
+
+    private static prepareDbArray(value: string[]) {
+        return `{${value.length ? `"${value.join(`", "`)}"` : ''}}`;
+    }
+
+    private async addItemVariants(siteId: string, sectionId: string, itemId: string, urls: string[]) {
+        const tableName = `t_${crypto.createHash('md5').update(`${sectionId}`).digest('hex')}`;
+        const queryStr = `
+            SELECT * FROM "${tableName}"
+            WHERE
+                id = '${itemId}';
+        `;
+        const currentItem = await this.queryRunner.query(queryStr);
+        for(const url of urls) {
+            const queryStr = `
+                SELECT COUNT(id) as ct FROM "${tableName}"
+                WHERE
+                    url = '${url}';
+            `;
+            const alreadyExists = await this.queryRunner.query(queryStr);
+            if(parseInt(alreadyExists[0].ct) === 0) {
+                const key = url.match(/\/([\w]*)$/);
+                const queryStr = `
+                    INSERT INTO "${tableName}" (
+                        created_at,
+                        updated_at,
+                        item_id,
+                        item_key,
+                        url,
+                        name,
+                        description
+                    ) VALUES (
+                        now(),
+                        now(),
+                        '${currentItem[0]['item_id']}',
+                        '${key[1]}',
+                        '${url}',
+                        '${currentItem[0]['name']}',
+                        '${currentItem[0]['description']}'
+                    ) RETURNING id;
+                `;
+                const newItem = await this.queryRunner.query(queryStr);
+                const jobData = {
+                    siteId,
+                    sectionId,
+                    itemId: newItem[0].id,
+                    url,
+                    index: 0,
+                    total: 0,
+                };
+                this.queueScrap.add(
+                    'jobScrapOnlinerCatalogDetail',
+                    jobData
+                );
+            }
+        }
+    }
 }
 
 @Module({
@@ -163,6 +255,21 @@ export class ParseOnlinerCatalogDetail {
         TypeOrmModule.forFeature([
             Section,
         ]),
+        BullModule.registerQueueAsync({
+            name: 'queueScrap',
+            useFactory: async () => ({
+                name: 'queueScrap',
+                redis: configService.getRedisConfig(),
+                prefix: 'da',
+                defaultJobOptions: {
+                    removeOnComplete: true,
+                    removeOnFail: true,
+                },
+                settings: {
+                    lockDuration: 300000,
+                },
+            })
+        }),
     ],
     providers: [
         ParseOnlinerCatalogDetail,
