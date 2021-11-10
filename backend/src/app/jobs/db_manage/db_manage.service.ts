@@ -32,7 +32,7 @@ export class DbManageService {
 
   @Process('jobDbManageOnlinerCatalogOptions')
   async jobDbManageOnlinerCatalogOptions(job: Job<{ siteId: string, sectionId: string }>) {
-    Logger.verbose(`jobDbManageOnlinerCatalogOptions ${job.data.siteId} ${job.data.sectionId} (pid ${process.pid})`, `job_dbmanage`); 
+    Logger.verbose(`jobDbManageOnlinerCatalogOptions section ${job.data.sectionId} (pid ${process.pid})`, `job_dbmanage`); 
     await this.dbManageOnlinerCatalogOptions.run(job.data.sectionId);
     return  { 
       siteId: job.data.siteId,
@@ -59,16 +59,16 @@ export class DbManageService {
 
   @OnQueueCompleted()
   async onCompleted(job: Job, result: any) {
-    Logger.verbose(`jobDbManageOnliner${job.data.sectionId} completed (pid ${process.pid})`, `job_dbmanage`);
+    Logger.verbose(`jobDbManageOnliner section ${job.data.sectionId} completed (pid ${process.pid})`, `job_dbmanage`);
   }
 
   @OnQueueFailed()
   async onFailed(job: Job, result: any) {
-    Logger.error(`jobDbManageOnliner ${job.data.sectionId} fails (pid ${process.pid})`, `job_dbmanage`);
+    Logger.error(`jobDbManageOnliner section ${job.data.sectionId} fails (pid ${process.pid})`, `job_dbmanage`);
   }
 
   @OnQueueError()
   async onError(job: Job, result: any) {
-    Logger.error(`jobDbManageOnliner ${job.data.sectionId} error (pid ${process.pid})`, `job_dbmanage`);
+    Logger.error(`jobDbManageOnliner section ${job.data.sectionId} error (pid ${process.pid})`, `job_dbmanage`);
   }
 }

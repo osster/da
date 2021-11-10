@@ -13,24 +13,26 @@ export class ActionsController {
     constructor(
         @InjectQueue('queueScrap')
         private readonly queueScrap: Queue,
+        @InjectQueue('queueDbManage')
+        private readonly queueDbManage: Queue,
         @InjectRepository(Section)
         private readonly sectionRepo: Repository<Section>,
     ) { }
 
-    @Post('/scan/:site_id/options')
-    public async scanOptions(
-        @Param('site_id') siteId: string
-    ): Promise<{ siteId: string }> {
-        const sections = await this.sectionRepo.find({ where: { site: siteId } });
-        sections.forEach((section) => {
-            // Scrap options
-            this.queueScrap.add('jobScrapOnlinerCatalogOptions', {
-                siteId,
-                sectionId: section.id,
-            });
-        });
-        return { siteId }
-    }
+    // @Post('/scan/:site_id/options')
+    // public async scanOptions(
+    //     @Param('site_id') siteId: string
+    // ): Promise<{ siteId: string }> {
+    //     const sections = await this.sectionRepo.find({ where: { site: siteId } });
+    //     sections.forEach((section) => {
+    //         // Scrap options
+    //         this.queueScrap.add('jobScrapOnlinerCatalogOptions', {
+    //             siteId,
+    //             sectionId: section.id,
+    //         });
+    //     });
+    //     return { siteId }
+    // }
 
     @Post('/scan/:site_id/items')
     public async scanItems(
@@ -90,6 +92,22 @@ export class ActionsController {
                 // if (delay === 5) return;
             }
         }
+        return { siteId }
+    }
+
+    @Post('/manage/:site_id/options/:section_id')
+    public async manageOptions(
+        @Param('site_id') siteId: string,
+        @Param('section_id') sectionId: string
+    ): Promise<{ siteId: string }> {
+        this.queueDbManage.add(
+            'jobDbManageOnlinerCatalogOptions',
+            {
+                siteId,
+                sectionId,
+            }
+        );
+
         return { siteId }
     }
 }

@@ -11,6 +11,7 @@ export enum OptionType {
   DICTIONARY = 'dictionary',
   NUMBER_RANGE = 'number_range',
   DICTIONARY_RANGE = 'dictionary_range',
+  STRING = 'string'
 }
 
 @Entity({ name: 'option' })
