@@ -47,16 +47,17 @@ export class ActionsController {
         return { siteId }
     }
 
-    @Post('/scan/:site_id/detail')
+    @Post('/scan/:site_id/detail/:section_id')
     public async scanDetail(
-        @Param('site_id') siteId: string
+        @Param('site_id') siteId: string,
+        @Param('section_id') sectionId: string
     ): Promise<{ siteId: string }> {
         const connection: Connection = getConnection();
         const queryRunner = connection.createQueryRunner();
         await queryRunner.connect();
 
         const sections: Section[] = await this.sectionRepo.find({
-            where: { site: siteId },
+            where: { site: siteId, id: sectionId },
             relations: ['site'],
         });
         let delay = 0;

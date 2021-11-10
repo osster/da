@@ -45,6 +45,8 @@ export class ScrapOnlinerCatalogDetail {
                 itemId,
                 filePath,
                 url,
+                index,
+                total
             };
         } catch (e) {
             console.error(e);

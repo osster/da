@@ -123,6 +123,8 @@ export class ParseOnlinerCatalogDetail {
             sectionId,
             itemId,
             filePath,
+            index,
+            total
         };
     }
 
@@ -168,14 +170,18 @@ export class ParseOnlinerCatalogDetail {
     }
 
     private async updateRecord(tableName: string, id: string, dirty: { [key: string]: string }) {
-        const queryStr = `
-            UPDATE "${tableName}" SET
-                ${Object.values(dirty).join(', ')},
-                updated_at = now()
-            WHERE
-                id = '${id}';
-        `;
-        await this.queryRunner.query(queryStr);
+        try {
+            const queryStr = `
+                UPDATE "${tableName}" SET
+                    ${Object.values(dirty).join(', ')},
+                    updated_at = now()
+                WHERE
+                    id = '${id}';
+            `;
+            await this.queryRunner.query(queryStr);
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     private getDirty(old, item): { [key: string]: string } {

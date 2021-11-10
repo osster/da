@@ -87,13 +87,14 @@ export class ParseOnlinerCatalogItems {
                 if (!row) {
                     // insert
                     await this.createRecord(this.tableName, i);
-                } else {
-                    // update
-                    const dirty = this.getDirty(row, i);
-                    if (Object.keys(dirty.values).length > 0) {
-                        await this.updateRecord(this.tableName, row.id, dirty); 
-                    }
-                }
+                } 
+                // else {
+                //     // update
+                //     const dirty = this.getDirty(row, i);
+                //     if (Object.keys(dirty.values).length > 0) {
+                //         await this.updateRecord(this.tableName, row.id, dirty); 
+                //     }
+                // }
             });
         } catch (e) {
             Logger.error('DbManageOnlinerCatalogItems fails', 'job_dbmanage_items');
