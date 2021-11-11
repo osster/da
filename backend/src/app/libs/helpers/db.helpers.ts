@@ -24,11 +24,26 @@ export class ParsedRepository {
         }
     }
 
-    public async getById(id: string): Promise<[]> {
+    public async getById(id: string): Promise<any> {
         const query = `
             SELECT * FROM ${this.table}
             WHERE id = '${id}';
         `;
         return await this.queryRunner.query(query);
     }
+
+    public async getByArgs(args): Promise<[]> {
+        const where = Object.keys(args).map((k) => {
+            return `"${k}" = '${args[k]}'`;
+        }).join(' AND ');
+        const query = `
+            SELECT * FROM ${this.table}
+            ${where !== '' ? `WHERE ${where}` : ''};
+        `;
+        return await this.queryRunner.query(query);
+    }
+
+    // public async close(): Promise<void> {
+    //     return await this.connection.close();
+    // }
 }

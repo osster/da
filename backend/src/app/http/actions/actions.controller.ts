@@ -110,4 +110,20 @@ export class ActionsController {
 
         return { siteId }
     }
+
+    @Post('/manage/:site_id/items/:section_id')
+    public async manageItems(
+        @Param('site_id') siteId: string,
+        @Param('section_id') sectionId: string
+    ): Promise<{ siteId: string }> {
+        this.queueDbManage.add(
+            'jobDbManageOnlinerCatalogItems',
+            {
+                siteId,
+                sectionId,
+            }
+        );
+
+        return { siteId }
+    }
 }

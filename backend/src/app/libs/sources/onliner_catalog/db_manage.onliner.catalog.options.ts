@@ -308,7 +308,7 @@ export class DbManageOnlinerCatalogOptions {
                         dataType = 'uuid ARRAY';
                         break;
                     case OptionType.STRING:
-                        dataType = 'VARCHAR(300)';
+                        dataType = 'TEXT'; // 'VARCHAR(300)';
                         break;
                 }
                 if (dataType != '') {
