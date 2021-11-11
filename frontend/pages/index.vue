@@ -1,7 +1,12 @@
 <template>
-  <Tutorial />
+  <b-row>
+    XXX
+  </b-row>
 </template>
 
 <script>
-export default {}
+export default {
+  name: 'Index',
+  layout: 'default'
+}
 </script>
