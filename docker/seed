@@ -1,3 +1,3 @@
 #!/bin/bash
 export CURRENT_UID=$(id -u):$(id -g)
-docker exec -it da_node sh -c "yarn seed"
+docker exec -it da_backend sh -c "yarn seed"

@@ -1,5 +1,23 @@
 version: "3.2"
 services:
+  traefik:
+    image: "traefik:v2.5"
+    container_name: traefik
+    ports:
+      - 80:80
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik-public-http.rule=Host(`${TRAEFIK_DOMAIN?Variable not set}`)
+      - traefik.http.routers.traefik-public-http.entrypoints=http
+      - traefik.http.routers.traefik-public-http.service=api@internal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --api.insecure=true
+
   da_redis:
     container_name: da_redis
     image: "redis:alpine"
@@ -10,9 +28,9 @@ services:
       - ${APP_SRC}/../docker/:/usr/local/etc/redis/
     environment:
       - REDIS_REPLICATION_MODE=master
-    networks:
-      node_net:
-        ipv4_address: 172.28.1.4
+    # networks:
+    #   node_net:
+    #     ipv4_address: 172.28.1.4
 
   da_adminer:
     container_name: da_adminer
@@ -20,9 +38,10 @@ services:
     restart: always
     ports:
       - 8080:8080
-    networks:
-      node_net:
-        ipv4_address: 172.28.1.7
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin-http.rule=Host(`${ADMIN_DOMAIN?Variable not set}`)
+      - traefik.http.routers.admin-http.entrypoints=http
   
   da_db:
     container_name: da_db
@@ -36,18 +55,18 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
-    networks:
-      node_net:
-        ipv4_address: 172.28.1.6
+    # networks:
+    #   node_net:
+    #     ipv4_address: 172.28.1.6
   
-  da_node:
-    container_name: da_node
+  da_backend:
+    container_name: da_backend
     build:
       context: ./../
       dockerfile: ./docker/containers/node/Dockerfile
     working_dir: /var/www
-    ports:
-      - 30001:3000
+    # ports:
+    #   - 30001:3000
     environment: 
       TS_NODE_TRANSPILE_ONLY: "true"
     volumes:
@@ -56,35 +75,42 @@ services:
       - da_db
       - da_redis
     command: sh -c "yarn start:dev"
-    networks:
-      node_net:
-        ipv4_address: 172.28.1.9
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.da-back-http.rule=Host(`${API_DOMAIN?Variable not set}`)
+      - traefik.http.routers.da-back-http.entrypoints=http
+      - traefik.http.services.da-back.loadbalancer.server.port=3000
   
-  # da_node_queue:
-  #   container_name: da_node_queue
-  #   build:
-  #     context: ./../
-  #     dockerfile: ./docker/containers/node/Dockerfile
-  #   working_dir: /var/www
-  #   ports:
-  #     - 30001:3000
-  #   volumes:
-  #     - /d/dev/projects/da/backend:/var/www
-  #   depends_on:
-  #     - da_db
-  #     - da_redis
-  #   command: sh -c "yarn start:dev"
-  #   networks:
-  #     node_net:
-  #       ipv4_address: 172.28.1.10
+  da_frontend:
+    container_name: da_frontend
+    build:
+      context: ./../
+      dockerfile: ./docker/containers/node/Dockerfile
+    working_dir: /var/www
+    # ports:
+    #   - 30002:3000
+    environment: 
+      TS_NODE_TRANSPILE_ONLY: "true"
+    volumes:
+      - ${FRT_SRC}:/var/www
+    depends_on:
+      - da_db
+      - da_redis
+    command: sh -c "yarn dev"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.da-frontend-http.rule=Host(`${APP_DOMAIN?Variable not set}`)
+      - traefik.http.routers.da-frontend-http.entrypoints=http
+      - traefik.http.services.da-frontend.loadbalancer.server.port=3000
+  
 
 # networking for the Redis container
-networks:
-  node_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.28.0.0/16
+# networks:
+#   node_net:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 172.28.0.0/16
 
 volumes:
   pgdata:
